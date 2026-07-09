@@ -1,13 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useCallback, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { FileTextIcon, UploadCloudIcon, XIcon, CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import BackgroundBlobs from "@/components/BackgroundBlobs";
 
+import toast from "react-hot-toast";
+import { useSubmitCVMutation } from "@/redux/careers/careersApi";
+
 const MAX_SIZE_MB = 5;
 const ACCEPTED_TYPES = [".pdf", ".doc", ".docx"];
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
+
+// convert a File to base64 (same pattern as your avatar upload flow)
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
 
 export default function CvUploadSection() {
 
@@ -17,7 +31,10 @@ export default function CvUploadSection() {
     const [errorMsg, setErrorMsg] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const [submitCV] = useSubmitCVMutation();
 
     const validateAndSetFile = (f: File) => {
         const ext = "." + f.name.split(".").pop()?.toLowerCase();
@@ -48,14 +65,31 @@ export default function CvUploadSection() {
         if (!file) return;
         setStatus("uploading");
 
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        setStatus("success");
+        try {
+            const base64 = await fileToBase64(file);
+
+            await submitCV({
+                name,
+                email,
+                message,
+                cvFile: base64,
+                cvFileName: file.name,
+            }).unwrap();
+
+            setStatus("success");
+        } catch (err: any) {
+            setStatus("error");
+            const msg = err?.data?.message || "Something went wrong. Please try again.";
+            setErrorMsg(msg);
+            toast.error(msg);
+        }
     };
 
     const reset = () => {
         setFile(null);
         setName("");
         setEmail("");
+        setMessage("");
         setStatus("idle");
         setErrorMsg("");
     };
@@ -111,6 +145,20 @@ export default function CvUploadSection() {
                                 />
                             </Field>
                         </div>
+
+                        <Field label="Message to HR (optional)">
+                            <textarea
+                                placeholder="Tell us which role you're interested in, your availability, or anything else you'd like HR to know..."
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                rows={4}
+                                maxLength={1000}
+                                className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current resize-none"
+                            />
+                            <span className="font-mono text-[10px] opacity-40 self-end">
+                                {message.length}/1000
+                            </span>
+                        </Field>
 
                         <div
                             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -196,7 +244,7 @@ export default function CvUploadSection() {
                             {status === "uploading" ? (
                                 <>
                                     <Loader2Icon size={17} className="animate-spin" />
-                                    Reviewing...
+                                    Submitting...
                                 </>
                             ) : (
                                 "Submit CV"
