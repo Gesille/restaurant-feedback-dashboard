@@ -12,7 +12,7 @@ export const careersApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     submitCV: builder.mutation<{ success: boolean; message: string }, SubmitCVData>({
       query: (data) => ({
-        url: "careers/submit-cv",
+        url: "submit-cv",
         method: "POST",
         body: data,
         credentials: "include" as const,
