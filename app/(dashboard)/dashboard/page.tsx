@@ -12,7 +12,7 @@ import { useGetAllCVsQuery } from "@/redux/careers/careersApi";
 
 
 export default function DashboardPage() {
-  const scansToday = restaurantsData.reduce((s, r) => s + r.scansToday, 0);
+  const scansToday = restaurantsData.reduce((s, r) => s + (r.scansToday ?? 0), 0);
   const activeQRs = restaurantsData.reduce((s, r) => s + (r.qrValue ? 1 : 0), 0);
 
   const { data: cvResponse, isLoading: cvLoading } = useGetAllCVsQuery();
