@@ -1,5 +1,5 @@
 import AdminCvDashboard from "@/components/cv/cvSubmission";
-import { QRGeneratorPanel } from "@/components/dashboard/restaurants/QRGeneratorPanel";
+
 import { Topbar } from "@/components/layout/Topbar";
 
 export default async function QrGeneratorPage({

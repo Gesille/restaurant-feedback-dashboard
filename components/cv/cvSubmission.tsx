@@ -52,7 +52,7 @@ export default function AdminCvDashboard() {
 
     return (
      
-        <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-20 sm:pt-24 md:px-10 lg:px-16">
+        
               
             
 
@@ -117,7 +117,7 @@ export default function AdminCvDashboard() {
                     </>
                 )}
             </div>
-        </main>
+        
     );
 }
 
