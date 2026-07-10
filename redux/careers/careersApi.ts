@@ -1,15 +1,19 @@
 import { apiSlice } from "../api/apiSlice";
 
 export type CvFile = { id: string; name: string; mimetype: string; downloadUrl: string };
+export type ApplicantNote = { id: string; text: string; author: string; createdAt: string };
+
 export type Applicant = {
   id: string;
   name: string;
   email: string;
   phone: string | null;
-  linkedin: string ;
+  linkedin: string;
   message: string | null;
-  stage: string | null;
-  job: string | null; // null = general submission, string = career application
+  stage: string;
+  assignedTo: string | null;
+  notes: ApplicantNote[];
+  job: string | null;
   submittedAt: string;
   cvFiles: CvFile[];
 };
@@ -76,6 +80,34 @@ export const careersApi = apiSlice.injectEndpoints({
         },
       }),
     }),
+    updateApplicantStage: builder.mutation<{ success: boolean; stage: string }, { id: string; stage: string }>({
+  query: ({ id, stage }) => ({
+    url: `${id}/stage`,
+    method: "PATCH",
+    body: { stage },
+    credentials: "include" as const,
+  }),
+  invalidatesTags: ["CV"],
+}),
+assignApplicant: builder.mutation<{ success: boolean; assignedTo: string | null }, { id: string; assignedTo: string }>({
+  query: ({ id, assignedTo }) => ({
+    url: `${id}/assign`,
+    method: "PATCH",
+    body: { assignedTo },
+    credentials: "include" as const,
+  }),
+  invalidatesTags: ["CV"],
+}),
+
+addApplicantNote: builder.mutation<{ success: boolean; notes: ApplicantNote[] }, { id: string; text: string; author: string }>({
+  query: ({ id, text, author }) => ({
+    url: `${id}/notes`,
+    method: "POST",
+    body: { text, author },
+    credentials: "include" as const,
+  }),
+  invalidatesTags: ["CV"],
+}),
   }),
 });
 
@@ -83,4 +115,7 @@ export const {
   useSubmitCVMutation,
   useGetAllCVsQuery,
   useLazyDownloadCVQuery,
+  useUpdateApplicantStageMutation,
+  useAssignApplicantMutation,
+  useAddApplicantNoteMutation,
 } = careersApi;
