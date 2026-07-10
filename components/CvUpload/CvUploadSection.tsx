@@ -154,7 +154,7 @@ export default function CvUploadSection() {
             id="cv-upload"
             className="relative bg-[#EDE6D6] text-[#1B1B18] overflow-hidden"
         >
-            <BackgroundBlobs variant="dossier" />
+            <BackgroundBlobs variant="warm" />
 
             {/* ── Header ───────────────────────────────────────────── */}
             <div className="px-4 md:px-16 lg:px-24 xl:px-32 pt-20 md:pt-28 pb-12 md:pb-16">

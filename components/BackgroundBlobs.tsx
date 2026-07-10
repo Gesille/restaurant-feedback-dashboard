@@ -6,7 +6,7 @@ export default function BackgroundBlobs({
     animate = false,
     fixed = false,
 }: {
-    variant?: "default" | "muted" | "warm" | "dossier";
+    variant?: "default" | "muted" | "warm";
     animate?: boolean;
     fixed?: boolean;
 }) {
@@ -24,14 +24,6 @@ export default function BackgroundBlobs({
         warm: [
             { cls: "top-0 left-[15%] size-72 bg-orange-500 opacity-60", move: { x: [0, 20, 0], y: [0, 20, 0] }, duration: 12 },
             { cls: "top-32 right-[15%] size-72 bg-pink-600 opacity-50", move: { x: [0, -20, 0], y: [0, -20, 0] }, duration: 14 },
-        ],
-        // Low-saturation ink/rust/brass wash — sits quietly behind a paper/dossier layout
-        // instead of competing with it. Kept subtle on purpose: this variant is meant to
-        // read as depth, not decoration.
-        dossier: [
-            { cls: "top-[-6rem] left-[6%] size-80 bg-[#B23A2E] opacity-[0.08]", move: { x: [0, 25, 0], y: [0, 15, 0] }, duration: 18 },
-            { cls: "top-40 right-[2%] size-96 bg-[#A6822C] opacity-[0.10]", move: { x: [0, -20, 0], y: [0, 20, 0] }, duration: 20 },
-            { cls: "top-[28rem] left-[30%] size-72 bg-[#1B1B18] opacity-[0.05]", move: { x: [0, 15, 0], y: [0, -15, 0] }, duration: 22 },
         ],
     };
 
