@@ -3,6 +3,17 @@
 "use client";
 import { useMemo, useState } from "react";
 import {
+    BriefcaseIcon,
+    UserIcon,
+    SearchIcon,
+    DownloadIcon,
+    MailIcon,
+    PhoneIcon,
+    Loader2Icon,
+    InboxIcon,
+    CalendarIcon,
+} from "lucide-react";
+import {
     Applicant,
     CvFile,
     useGetAllCVsQuery,
@@ -30,64 +41,76 @@ export default function AdminCvDashboard() {
     const generalApplicants = filtered.filter((a: any) => !a.job);
 
     return (
-        <main className="min-h-screen bg-gray-50 px-4 py-8 md:px-8">
-            <div className="mx-auto max-w-5xl">
+        <main className="min-h-screen bg-slate-50 px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+            <div className="mx-auto max-w-6xl">
                 {/* Header */}
-                <div className="border-b border-gray-200 pb-4">
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                        CV Submissions
+                <div className="flex flex-col gap-1 border-b border-slate-200 pb-8">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-indigo-600">
+                        Recruitment
+                    </span>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                        Submissions
                     </h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        All CVs received, split by whether they were submitted for a
-                        specific role or sent in generally.
+                    <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-500">
+                        Every CV that&apos;s come in, split by whether it&apos;s tied to an
+                        open role or sent in on its own.
                     </p>
                 </div>
 
                 {/* Stats */}
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <StatCard label="Total submissions" value={applicants.length} />
+                <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <StatCard
+                        label="Total submissions"
+                        value={applicants.length}
+                        icon={InboxIcon}
+                        accent="bg-indigo-600"
+                    />
                     <StatCard
                         label="Career applications"
                         value={applicants.filter((a: any) => a.job).length}
+                        icon={BriefcaseIcon}
+                        accent="bg-teal-600"
                     />
                     <StatCard
                         label="General CVs"
                         value={applicants.filter((a: any) => !a.job).length}
+                        icon={UserIcon}
+                        accent="bg-amber-500"
                     />
                 </div>
 
                 {/* Search */}
-                <div className="mt-6">
-                    <label htmlFor="search" className="block text-sm font-medium text-gray-700">
-                        Search
-                    </label>
+                <div className="relative mt-8 max-w-sm">
+                    <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <input
-                        id="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by name, email, or role"
-                        className="mt-1 w-full max-w-sm rounded border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-500"
+                        placeholder="Search name, email, or role"
+                        className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3.5 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                     />
                 </div>
 
                 {isLoading ? (
-                    <p className="mt-10 text-center text-sm text-gray-500">
-                        Loading submissions…
-                    </p>
+                    <div className="mt-16 flex items-center justify-center gap-2 text-slate-400">
+                        <Loader2Icon className="size-4 animate-spin" />
+                        <span className="text-sm">Loading submissions…</span>
+                    </div>
                 ) : isError ? (
-                    <p className="mt-10 text-center text-sm text-red-600">
+                    <p className="mt-16 text-center text-sm text-red-600">
                         {(error as any)?.data?.message || "Something went wrong"}
                     </p>
                 ) : (
                     <>
                         <Section
                             title="Career applications"
+                            eyebrow="01"
                             empty="No one has applied to a specific role yet."
                             items={careerApplicants}
                         />
                         <Section
                             title="General submissions"
-                            empty="No general CVs on file yet."
+                            eyebrow="02"
+                            empty="No open CVs on file yet."
                             items={generalApplicants}
                         />
                     </>
@@ -97,103 +120,110 @@ export default function AdminCvDashboard() {
     );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+    label,
+    value,
+    icon: Icon,
+    accent,
+}: {
+    label: string;
+    value: number;
+    icon: any;
+    accent: string;
+}) {
     return (
-        <div className="rounded border border-gray-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                {label}
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
+        <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+            <div className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${accent}`}>
+                <Icon className="size-5 text-white" />
+            </div>
+            <div>
+                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                <p className="text-xs font-medium text-slate-500">{label}</p>
+            </div>
         </div>
     );
 }
 
 function Section({
     title,
+    eyebrow,
     empty,
     items,
 }: {
     title: string;
+    eyebrow: string;
     empty: string;
     items: Applicant[];
 }) {
     return (
-        <div className="mt-8">
-            <h2 className="text-base font-semibold text-gray-900">
-                {title} <span className="font-normal text-gray-400">({items.length})</span>
-            </h2>
+        <div className="mt-12">
+            <div className="mb-4 flex items-baseline gap-3">
+                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-600">
+                    {eyebrow}
+                </span>
+                <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+                <span className="text-xs text-slate-400">({items.length})</span>
+            </div>
 
             {items.length === 0 ? (
-                <div className="mt-3 rounded border border-dashed border-gray-300 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
                     {empty}
                 </div>
             ) : (
-                <div className="mt-3 overflow-hidden rounded border border-gray-200 bg-white">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <Th>Name</Th>
-                                <Th>Contact</Th>
-                                <Th>Role</Th>
-                                <Th>Stage</Th>
-                                <Th>Submitted</Th>
-                                <Th>CV</Th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {items.map((a) => (
-                                <ApplicantRow key={a.id} applicant={a} />
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="flex flex-col gap-3">
+                    {items.map((a) => (
+                        <ApplicantCard key={a.id} applicant={a} />
+                    ))}
                 </div>
             )}
         </div>
     );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
+function ApplicantCard({ applicant }: { applicant: Applicant }) {
     return (
-        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-            {children}
-        </th>
-    );
-}
-
-function ApplicantRow({ applicant }: { applicant: Applicant }) {
-    return (
-        <tr>
-            <td className="px-4 py-3 align-top">
-                <div className="font-medium text-gray-900">{applicant.name}</div>
-                {applicant.message && (
-                    <div className="mt-1 line-clamp-2 max-w-xs text-xs text-gray-500">
-                        {applicant.message}
-                    </div>
-                )}
-            </td>
-            <td className="px-4 py-3 align-top text-gray-600">
-                <div>{applicant.email}</div>
-                {applicant.phone && (
-                    <div className="text-xs text-gray-500">{applicant.phone}</div>
-                )}
-            </td>
-            <td className="px-4 py-3 align-top text-gray-600">
-                {applicant.job || <span className="text-gray-400">—</span>}
-            </td>
-            <td className="px-4 py-3 align-top text-gray-600">
-                {applicant.stage || <span className="text-gray-400">—</span>}
-            </td>
-            <td className="px-4 py-3 align-top text-gray-600">
-                {new Date(applicant.submittedAt).toLocaleDateString()}
-            </td>
-            <td className="px-4 py-3 align-top">
-                <div className="flex flex-col items-start gap-1">
-                    {applicant.cvFiles.map((f: CvFile) => (
-                        <DownloadButton key={f.id} file={f} />
-                    ))}
+        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-semibold text-slate-900">{applicant.name}</h3>
+                    {applicant.job && (
+                        <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
+                            {applicant.job}
+                        </span>
+                    )}
+                    {applicant.stage && (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+                            {applicant.stage}
+                        </span>
+                    )}
                 </div>
-            </td>
-        </tr>
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                        <MailIcon className="size-3.5" /> {applicant.email}
+                    </span>
+                    {applicant.phone && (
+                        <span className="flex items-center gap-1">
+                            <PhoneIcon className="size-3.5" /> {applicant.phone}
+                        </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                        <CalendarIcon className="size-3.5" />
+                        {new Date(applicant.submittedAt).toLocaleDateString()}
+                    </span>
+                </div>
+
+                {applicant.message && (
+                    <p className="mt-2 line-clamp-2 text-xs text-slate-500">{applicant.message}</p>
+                )}
+            </div>
+
+            <div className="flex gap-2 sm:flex-col sm:items-end">
+                {applicant.cvFiles.map((f: CvFile) => (
+                    <DownloadButton key={f.id} file={f} />
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -224,14 +254,19 @@ function DownloadButton({ file }: { file: CvFile }) {
     };
 
     return (
-        <div className="flex flex-col items-start gap-0.5">
+        <div className="flex flex-col items-end gap-1">
             <button
                 type="button"
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-                {isDownloading ? "Downloading…" : file.name}
+                {isDownloading ? (
+                    <Loader2Icon className="size-3.5 animate-spin" />
+                ) : (
+                    <DownloadIcon className="size-3.5" />
+                )}
+                {file.name}
             </button>
             {downloadError && (
                 <span className="text-[11px] text-red-600">{downloadError}</span>
