@@ -15,7 +15,7 @@ export default function RestaurantsPage() {
             <RestaurantCard key={r.id} r={r} />
           ))}
 
-          <button className="flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-violet-300 hover:text-violet-500">
+          <button className="flex min-h-70 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-violet-300 hover:text-violet-500">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50">
               <Plus size={18} />
             </span>
