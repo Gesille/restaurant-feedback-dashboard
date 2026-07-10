@@ -1,9 +1,8 @@
 import { apiSlice } from "../api/apiSlice";
 
-export type CvFile = { id: number; name: string; mimetype: string; downloadUrl: string };
-
+export type CvFile = { id: string; name: string; mimetype: string; downloadUrl: string };
 export type Applicant = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string | null;
