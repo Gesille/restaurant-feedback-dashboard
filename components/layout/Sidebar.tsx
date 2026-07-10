@@ -31,7 +31,7 @@ const mainNav: { href: string; label: string; icon: any; color: BrandColor; badg
 ];
 
 const workspaceNav: { href: string; label: string; icon: any; color: BrandColor }[] = [
-  { href: "/profile", label: "Clients", icon: Users, color: "blue" },
+  { href: "/CV", label: "New CV Submissions", icon: Users, color: "blue" },
   { href: "/reports", label: "Reports", icon: FileBarChart, color: "coral" },
   { href: "/settings", label: "Settings", icon: Settings, color: "slate" },
 ];
