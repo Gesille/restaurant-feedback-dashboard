@@ -348,12 +348,12 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                 <div className="mt-6 border-t border-slate-100 pt-5">
                     <label className="text-xs font-medium uppercase tracking-wide text-slate-400">Notes</label>
                     <div className="mt-2 flex flex-col gap-2">
-                        {applicant.notes.map((n) => (
-                            <div key={n.id} className="rounded-lg bg-slate-50 p-2.5 text-xs">
-                                <p className="text-slate-700">{n.text}</p>
-                                <p className="mt-1 text-slate-400">{n.author} · {new Date(n.createdAt).toLocaleDateString()}</p>
-                            </div>
-                        ))}
+                      {(applicant.notes || []).map((n) => (
+    <div key={n.id} className="rounded-lg bg-slate-50 p-2.5 text-xs">
+        <p className="text-slate-700">{n.text}</p>
+        <p className="mt-1 text-slate-400">{n.author} · {new Date(n.createdAt).toLocaleDateString()}</p>
+    </div>
+))}
                     </div>
                     <div className="mt-2 flex gap-2">
                         <input
