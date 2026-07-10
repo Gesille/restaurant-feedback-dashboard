@@ -271,15 +271,36 @@ function DownloadButton({ file }: { file: CvFile }) {
 
 function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose: () => void }) {
     const [assignedTo, setAssignedTo] = useState(applicant.assignedTo || "");
+    const [assignError, setAssignError] = useState<string | null>(null);
     const [noteText, setNoteText] = useState("");
-    const [assign] = useAssignApplicantMutation();
+    const [assign, { isLoading: isAssigning }] = useAssignApplicantMutation();
     const [addNote, { isLoading: isAddingNote }] = useAddApplicantNoteMutation();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const handleAssignBlur = async () => {
+        const trimmed = assignedTo.trim();
+        if (trimmed && !emailRegex.test(trimmed)) {
+            setAssignError("Enter a valid email address");
+            return;
+        }
+        setAssignError(null);
+        try {
+            await assign({ id: applicant.id, assignedTo: trimmed }).unwrap();
+        } catch (err: any) {
+            setAssignError(err?.data?.message || "Failed to assign");
+        }
+    };
 
     const handleAddNote = async () => {
         if (!noteText.trim()) return;
-        await addNote({ id: applicant.id, text: noteText.trim(), author: "HR" }).unwrap().catch(() => {});
+        await addNote({ id: applicant.id, text: noteText.trim(), author: "HR" })
+            .unwrap()
+            .catch((err) => console.error("Add note failed:", err));
         setNoteText("");
     };
+
+    // ...rest unchanged until the "Assigned to" block
 
     return (
         <>
@@ -332,17 +353,28 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                     </div>
                 </div>
 
-                <div className="mt-6 border-t border-slate-100 pt-5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-slate-400">Assigned to</label>
-                    <div className="mt-1.5 flex gap-2">
+               <div className="mt-6 border-t border-slate-100 pt-5">
+                    <label className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        Assign to (email)
+                    </label>
+                    <div className="mt-1.5 flex items-center gap-2">
                         <input
+                            type="email"
                             value={assignedTo}
-                            onChange={(e) => setAssignedTo(e.target.value)}
-                            onBlur={() => assign({ id: applicant.id, assignedTo })}
-                            placeholder="Recruiter name"
-                            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-fuchsia-300"
+                            onChange={(e) => { setAssignedTo(e.target.value); setAssignError(null); }}
+                            onBlur={handleAssignBlur}
+                            placeholder="recruiter@company.com"
+                            className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none ${
+                                assignError ? "border-red-300 focus:border-red-400" : "border-slate-200 focus:border-fuchsia-300"
+                            }`}
                         />
+                        {isAssigning && <Loader2Icon className="size-4 shrink-0 animate-spin text-fuchsia-500" />}
                     </div>
+                    {assignError ? (
+                        <p className="mt-1 text-xs text-red-600">{assignError}</p>
+                    ) : (
+                        <p className="mt-1 text-xs text-slate-400">They&apos;ll get an email when you assign this candidate.</p>
+                    )}
                 </div>
 
                 <div className="mt-6 border-t border-slate-100 pt-5">
