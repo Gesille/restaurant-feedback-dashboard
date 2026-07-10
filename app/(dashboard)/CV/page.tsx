@@ -14,9 +14,11 @@ import {
     PhoneIcon,
     Loader2Icon,
     InboxIcon,
+ 
     ChevronLeftIcon,
     ChevronRightIcon,
 } from "lucide-react";
+import BackgroundBlobs from "@/components/BackgroundBlobs";
 import {
     Applicant,
     CvFile,
@@ -49,38 +51,41 @@ export default function AdminCvDashboard() {
     const generalApplicants = filtered.filter((a: any) => !a.job);
 
     return (
-        <main className="min-h-screen bg-white px-4 pb-24 pt-8 sm:pt-10 md:px-10 lg:px-16">
-            <Topbar title="CV Submissions" subtitle="Every CV that comes in, split by whether it's tied to an open role or sent in on its own." />
+     
+        <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-20 sm:pt-24 md:px-10 lg:px-16">
+               <Topbar title="CV Submissions" subtitle="Every CV that comes in, split by whether it's tied to an open role or sent in on its own." />
+            <BackgroundBlobs variant="muted" />
+
             <div className="mx-auto max-w-6xl">
                 {/* Header */}
-                <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4 }}>
-                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                        Recruitment
+                <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+                    <span className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text font-mono text-xs font-semibold uppercase tracking-widest text-transparent">
+                        [ Recruitment ]
                     </span>
-                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                    <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">
                         Submissions
                     </h1>
-                    <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-500">
+                    <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
                         Every CV that&apos;s come in, split by whether it&apos;s tied to an open role
                         or sent in on its own.
                     </p>
                 </motion.div>
 
                 {/* Stats */}
-                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <StatCard label="Total submissions" value={applicants.length} icon={InboxIcon} />
                     <StatCard label="Career applications" value={applicants.filter((a: any) => a.job).length} icon={BriefcaseIcon} />
                     <StatCard label="General CVs" value={applicants.filter((a: any) => !a.job).length} icon={UserIcon} />
                 </div>
 
                 {/* Search */}
-                <div className="relative mt-6 max-w-sm">
+                <div className="relative mt-8 max-w-sm">
                     <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search name, email, or role"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                        className="w-full rounded-xl border border-transparent bg-fuchsia-50/60 py-2.5 pl-10 pr-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-fuchsia-300 focus:bg-white"
                     />
                 </div>
 
@@ -118,13 +123,13 @@ export default function AdminCvDashboard() {
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-900">
-                <Icon className="size-4 text-white" />
+        <div className="flex items-center gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-4 shadow-sm backdrop-blur-xl">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600">
+                <Icon className="size-5 text-white" />
             </div>
             <div>
-                <p className="text-lg font-semibold leading-none text-slate-900">{value}</p>
-                <p className="mt-1 text-xs text-slate-500">{label}</p>
+                <p className="text-xl font-semibold text-slate-900">{value}</p>
+                <p className="text-xs text-slate-500">{label}</p>
             </div>
         </div>
     );
@@ -145,6 +150,7 @@ function Section({
 }) {
     const [page, setPage] = useState(1);
 
+ 
     useEffect(() => {
         setPage(1);
     }, [resetKey]);
@@ -156,27 +162,27 @@ function Section({
     return (
         <div className="mt-10">
             <div className="mb-4 flex items-baseline gap-3">
-                <span className="rounded-full border border-slate-200 px-2 py-0.5 font-mono text-[11px] text-slate-400">
+                <span className="rounded-full border border-fuchsia-200 px-2.5 py-0.5 font-mono text-[11px] text-fuchsia-600">
                     {eyebrow}
                 </span>
-                <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
                 <span className="text-xs text-slate-400">({items.length})</span>
             </div>
 
             {items.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-400">
+                <div className="rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-10 text-center text-sm text-slate-500">
                     {empty}
                 </div>
             ) : (
                 <>
-                    <div className="flex flex-col divide-y divide-slate-100 rounded-2xl border border-slate-200">
+                    <div className="flex flex-col gap-3">
                         {pageItems.map((a) => (
                             <ApplicantCard key={a.id} applicant={a} />
                         ))}
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="mt-3 flex items-center justify-between gap-4 px-1 text-xs text-slate-500">
+                        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-fuchsia-100 bg-white/70 px-4 py-2.5 text-xs text-slate-500">
                             <span>
                                 Showing {(safePage - 1) * PAGE_SIZE + 1}–
                                 {Math.min(safePage * PAGE_SIZE, items.length)} of {items.length}
@@ -186,7 +192,7 @@ function Section({
                                     type="button"
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={safePage === 1}
-                                    className="flex size-7 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40"
                                     aria-label="Previous page"
                                 >
                                     <ChevronLeftIcon className="size-3.5" />
@@ -198,7 +204,7 @@ function Section({
                                     type="button"
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={safePage === totalPages}
-                                    className="flex size-7 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40"
                                     aria-label="Next page"
                                 >
                                     <ChevronRightIcon className="size-3.5" />
@@ -216,15 +222,15 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
     return (
         <motion.div
             layout
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col gap-3 p-5 transition hover:bg-slate-50/60 sm:flex-row sm:items-center sm:justify-between"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
         >
             <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-sm font-semibold text-slate-900">{applicant.name}</h3>
                     {applicant.job && (
-                        <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                        <span className="rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-2.5 py-0.5 text-[11px] font-semibold text-white">
                             {applicant.job}
                         </span>
                     )}
@@ -238,14 +244,14 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                     <a
                         href={`mailto:${applicant.email}`}
-                        className="flex items-center gap-1 hover:text-slate-900 hover:underline"
+                        className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
                     >
                         <MailIcon className="size-3.5" /> {applicant.email}
                     </a>
                     {applicant.phone && (
                         <a
                             href={`tel:${applicant.phone}`}
-                            className="flex items-center gap-1 hover:text-slate-900 hover:underline"
+                            className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
                         >
                             <PhoneIcon className="size-3.5" /> {applicant.phone}
                         </a>
@@ -255,9 +261,9 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                             href={(applicant as any).linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[#0A66C2] hover:underline"
+                            className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
                         >
-                            <FaLinkedin className="size-3.5" /> LinkedIn
+                            <FaLinkedin className="w-5 h-5 text-blue-600" />
                         </a>
                     )}
                     <span>{new Date(applicant.submittedAt).toLocaleDateString()}</span>
@@ -309,7 +315,7 @@ function DownloadButton({ file }: { file: CvFile }) {
                 type="button"
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-fuchsia-50 px-3.5 py-1.5 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {isDownloading ? (
                     <Loader2Icon className="size-3.5 animate-spin" />
