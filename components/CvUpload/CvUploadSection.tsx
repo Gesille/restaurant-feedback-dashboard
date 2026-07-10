@@ -152,7 +152,7 @@ export default function CvUploadSection() {
     return (
         <section
             id="cv-upload"
-            className="relative bg-[#EDE6D6] text-[#1B1B18] overflow-hidden"
+            className="relative  text-[#1B1B18] overflow-hidden"
         >
             <BackgroundBlobs variant="warm" />
 
