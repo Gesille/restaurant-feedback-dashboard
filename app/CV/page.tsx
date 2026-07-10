@@ -2,6 +2,7 @@
 
 "use client";
 import { useMemo, useState } from "react";
+import { motion } from "motion/react";
 import {
     BriefcaseIcon,
     UserIcon,
@@ -11,8 +12,8 @@ import {
     PhoneIcon,
     Loader2Icon,
     InboxIcon,
-    CalendarIcon,
 } from "lucide-react";
+import BackgroundBlobs from "@/components/BackgroundBlobs";
 import {
     Applicant,
     CvFile,
@@ -41,42 +42,29 @@ export default function AdminCvDashboard() {
     const generalApplicants = filtered.filter((a: any) => !a.job);
 
     return (
-        <main className="min-h-screen bg-slate-50 px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+        <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-28 sm:pt-32 md:px-10 lg:px-16">
+            <BackgroundBlobs variant="muted" />
+
             <div className="mx-auto max-w-6xl">
                 {/* Header */}
-                <div className="flex flex-col gap-1 border-b border-slate-200 pb-8">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-indigo-600">
-                        Recruitment
+                <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+                    <span className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text font-mono text-xs font-semibold uppercase tracking-widest text-transparent">
+                        [ Recruitment ]
                     </span>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                    <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
                         Submissions
                     </h1>
-                    <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-500">
-                        Every CV that&apos;s come in, split by whether it&apos;s tied to an
-                        open role or sent in on its own.
+                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                        Every CV that&apos;s come in, split by whether it&apos;s tied to an open role
+                        or sent in on its own.
                     </p>
-                </div>
+                </motion.div>
 
                 {/* Stats */}
-                <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <StatCard
-                        label="Total submissions"
-                        value={applicants.length}
-                        icon={InboxIcon}
-                        accent="bg-indigo-600"
-                    />
-                    <StatCard
-                        label="Career applications"
-                        value={applicants.filter((a: any) => a.job).length}
-                        icon={BriefcaseIcon}
-                        accent="bg-teal-600"
-                    />
-                    <StatCard
-                        label="General CVs"
-                        value={applicants.filter((a: any) => !a.job).length}
-                        icon={UserIcon}
-                        accent="bg-amber-500"
-                    />
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <StatCard label="Total submissions" value={applicants.length} icon={InboxIcon} />
+                    <StatCard label="Career applications" value={applicants.filter((a: any) => a.job).length} icon={BriefcaseIcon} />
+                    <StatCard label="General CVs" value={applicants.filter((a: any) => !a.job).length} icon={UserIcon} />
                 </div>
 
                 {/* Search */}
@@ -86,7 +74,7 @@ export default function AdminCvDashboard() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search name, email, or role"
-                        className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3.5 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                        className="w-full rounded-xl border border-transparent bg-fuchsia-50/60 py-2.5 pl-10 pr-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-fuchsia-300 focus:bg-white"
                     />
                 </div>
 
@@ -120,25 +108,15 @@ export default function AdminCvDashboard() {
     );
 }
 
-function StatCard({
-    label,
-    value,
-    icon: Icon,
-    accent,
-}: {
-    label: string;
-    value: number;
-    icon: any;
-    accent: string;
-}) {
+function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
     return (
-        <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-            <div className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${accent}`}>
+        <div className="flex items-center gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-4 shadow-sm backdrop-blur-xl">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600">
                 <Icon className="size-5 text-white" />
             </div>
             <div>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                <p className="text-xs font-medium text-slate-500">{label}</p>
+                <p className="text-xl font-semibold text-slate-900">{value}</p>
+                <p className="text-xs text-slate-500">{label}</p>
             </div>
         </div>
     );
@@ -156,9 +134,9 @@ function Section({
     items: Applicant[];
 }) {
     return (
-        <div className="mt-12">
+        <div className="mt-10">
             <div className="mb-4 flex items-baseline gap-3">
-                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-600">
+                <span className="rounded-full border border-fuchsia-200 px-2.5 py-0.5 font-mono text-[11px] text-fuchsia-600">
                     {eyebrow}
                 </span>
                 <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
@@ -166,7 +144,7 @@ function Section({
             </div>
 
             {items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
+                <div className="rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-10 text-center text-sm text-slate-500">
                     {empty}
                 </div>
             ) : (
@@ -182,12 +160,17 @@ function Section({
 
 function ApplicantCard({ applicant }: { applicant: Applicant }) {
     return (
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-5 shadow-sm backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+        >
             <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-sm font-semibold text-slate-900">{applicant.name}</h3>
                     {applicant.job && (
-                        <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
+                        <span className="rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-2.5 py-0.5 text-[11px] font-semibold text-white">
                             {applicant.job}
                         </span>
                     )}
@@ -198,7 +181,7 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                     )}
                 </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                         <MailIcon className="size-3.5" /> {applicant.email}
                     </span>
@@ -207,10 +190,7 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                             <PhoneIcon className="size-3.5" /> {applicant.phone}
                         </span>
                     )}
-                    <span className="flex items-center gap-1">
-                        <CalendarIcon className="size-3.5" />
-                        {new Date(applicant.submittedAt).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(applicant.submittedAt).toLocaleDateString()}</span>
                 </div>
 
                 {applicant.message && (
@@ -223,7 +203,7 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                     <DownloadButton key={f.id} file={f} />
                 ))}
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -259,7 +239,7 @@ function DownloadButton({ file }: { file: CvFile }) {
                 type="button"
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-fuchsia-50 px-3.5 py-1.5 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {isDownloading ? (
                     <Loader2Icon className="size-3.5 animate-spin" />
