@@ -16,8 +16,8 @@ export type Applicant = {
 type SubmitCVData = {
   name: string;
   email: string;
-phone: string;
-linkedin: string ;
+  phone: string;
+  linkedin: string;
   message: string;
   cvFile: string;
   cvFileName: string;
@@ -47,7 +47,39 @@ export const careersApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["CV"],
     }),
+
+    downloadCV: builder.query<{ blob: Blob; filename: string | null }, string>({
+      query: (attachmentId) => ({
+        url: `download/${attachmentId}`,
+        method: "GET",
+        credentials: "include" as const,
+        
+        responseHandler: async (response: Response) => {
+          if (!response.ok) {
+            let message = "Failed to download file";
+            try {
+              const errJson = await response.clone().json();
+              message = errJson?.message || message;
+            } catch {
+         new Error(message);
+            }
+            throw new Error(message);
+          }
+
+          const disposition = response.headers.get("Content-Disposition") || "";
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          const filename = match ? match[1] : null;
+
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+    }),
   }),
 });
 
-export const { useSubmitCVMutation, useGetAllCVsQuery } = careersApi;
+export const {
+  useSubmitCVMutation,
+  useGetAllCVsQuery,
+  useLazyDownloadCVQuery,
+} = careersApi;

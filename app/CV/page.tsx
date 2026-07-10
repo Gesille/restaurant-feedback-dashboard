@@ -14,10 +14,12 @@ import {
     InboxIcon,
 } from "lucide-react";
 import BackgroundBlobs from "@/components/BackgroundBlobs";
-import { Applicant, useGetAllCVsQuery } from "@/redux/careers/careersApi";
-
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+import {
+    Applicant,
+    CvFile,
+    useGetAllCVsQuery,
+    useLazyDownloadCVQuery,
+} from "@/redux/careers/careersApi";
 
 export default function AdminCvDashboard() {
     const [search, setSearch] = useState("");
@@ -29,15 +31,15 @@ export default function AdminCvDashboard() {
         const q = search.trim().toLowerCase();
         if (!q) return applicants;
         return applicants.filter(
-            (a:any) =>
+            (a: any) =>
                 a.name?.toLowerCase().includes(q) ||
                 a.email?.toLowerCase().includes(q) ||
                 a.job?.toLowerCase().includes(q)
         );
     }, [applicants, search]);
 
-    const careerApplicants = filtered.filter((a:any) => a.job);
-    const generalApplicants = filtered.filter((a:any) => !a.job);
+    const careerApplicants = filtered.filter((a: any) => a.job);
+    const generalApplicants = filtered.filter((a: any) => !a.job);
 
     return (
         <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-28 sm:pt-32 md:px-10 lg:px-16">
@@ -61,8 +63,8 @@ export default function AdminCvDashboard() {
                 {/* Stats */}
                 <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <StatCard label="Total submissions" value={applicants.length} icon={InboxIcon} />
-                    <StatCard label="Career applications" value={applicants.filter((a:any) => a.job).length} icon={BriefcaseIcon} />
-                    <StatCard label="General CVs" value={applicants.filter((a:any) => !a.job).length} icon={UserIcon} />
+                    <StatCard label="Career applications" value={applicants.filter((a: any) => a.job).length} icon={BriefcaseIcon} />
+                    <StatCard label="General CVs" value={applicants.filter((a: any) => !a.job).length} icon={UserIcon} />
                 </div>
 
                 {/* Search */}
@@ -197,17 +199,58 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
             </div>
 
             <div className="flex gap-2 sm:flex-col sm:items-end">
-                {applicant.cvFiles.map((f:any) => (
-                    <a
-                        key={f.id}
-                        href={`${API_BASE}/api/v1/cv/download/${f.id}`}
-                        className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-fuchsia-50 px-3.5 py-1.5 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100"
-                    >
-                        <DownloadIcon className="size-3.5" />
-                        {f.name}
-                    </a>
+                {applicant.cvFiles.map((f: CvFile) => (
+                    <DownloadButton key={f.id} file={f} />
                 ))}
             </div>
         </motion.div>
+    );
+}
+
+function DownloadButton({ file }: { file: CvFile }) {
+    const [triggerDownload] = useLazyDownloadCVQuery();
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
+
+    const handleDownload = async () => {
+        setIsDownloading(true);
+        setDownloadError(null);
+        try {
+            const result = await triggerDownload(file.id).unwrap();
+            const url = window.URL.createObjectURL(result.blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = result.filename || file.name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err: any) {
+            console.error("CV download failed:", err);
+            setDownloadError(err?.message || "Download failed");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col items-end gap-1">
+            <button
+                type="button"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-fuchsia-50 px-3.5 py-1.5 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                {isDownloading ? (
+                    <Loader2Icon className="size-3.5 animate-spin" />
+                ) : (
+                    <DownloadIcon className="size-3.5" />
+                )}
+                {file.name}
+            </button>
+            {downloadError && (
+                <span className="text-[11px] text-red-600">{downloadError}</span>
+            )}
+        </div>
     );
 }
