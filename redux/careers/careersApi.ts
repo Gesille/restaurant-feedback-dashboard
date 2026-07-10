@@ -6,6 +6,7 @@ export type Applicant = {
   name: string;
   email: string;
   phone: string | null;
+  linkedin: string ;
   message: string | null;
   stage: string | null;
   job: string | null; // null = general submission, string = career application
