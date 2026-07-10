@@ -215,7 +215,7 @@ export default function CvUploadSection() {
                             </span>
                         </div>
 
-                        <div className="relative rounded-b-2xl rounded-tr-2xl border border-[#C9BFA8] bg-[#F7F3E9] shadow-[0_1px_0_0_#C9BFA8] p-6 sm:p-8">
+                        <div className="relative rounded-b-2xl rounded-tr-2xl border border-orange-200/50 bg-white/70 backdrop-blur-md shadow-[0_20px_60px_-12px_rgba(249,115,22,0.25),0_8px_24px_-8px_rgba(219,39,119,0.2)] p-6 sm:p-8">
                             {status === "success" ? (
                                 <SuccessStamp name={name} caseNumber={caseNumber} onReset={reset} />
                             ) : (
@@ -244,10 +244,11 @@ export default function CvUploadSection() {
                                     </div>
 
                                     <div className="grid sm:grid-cols-2 gap-4">
-                                        <Field label="Phone number (optional)">
+                                        <Field label="Phone number">
                                             <input
                                                 type="tel"
                                                 placeholder="+1 555 123 4567"
+                                                required
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
                                                 className={inputCls}
