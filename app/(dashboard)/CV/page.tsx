@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -49,7 +50,7 @@ export default function AdminCvDashboard() {
     const generalApplicants = filtered.filter((a: any) => !a.job);
 
     return (
-        <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-28 sm:pt-32 md:px-10 lg:px-16">
+        <main className="relative min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white px-4 pb-24 pt-20 sm:pt-24 md:px-10 lg:px-16">
             <BackgroundBlobs variant="muted" />
 
             <div className="mx-auto max-w-6xl">
@@ -58,10 +59,10 @@ export default function AdminCvDashboard() {
                     <span className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text font-mono text-xs font-semibold uppercase tracking-widest text-transparent">
                         [ Recruitment ]
                     </span>
-                    <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
+                    <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">
                         Submissions
                     </h1>
-                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                    <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
                         Every CV that&apos;s come in, split by whether it&apos;s tied to an open role
                         or sent in on its own.
                     </p>
