@@ -189,7 +189,7 @@ export function Sidebar() {
           {open && (
             <div className="overflow-hidden whitespace-nowrap">
               <p className="text-[16.5px] font-extrabold tracking-tight leading-tight text-[#1A1730]">
-                MenuScan
+                HR Dashboard
               </p>
               <p className="text-[10.5px] font-semibold uppercase tracking-widest leading-tight text-[#9C97B5]">
                 Client Evaluation
