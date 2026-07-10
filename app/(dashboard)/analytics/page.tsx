@@ -51,47 +51,27 @@ function StatCard({
 
 export default function RestaurantAnalyticsPage() {
   const params = useParams();
-  const rawId = params?.id;
-  const restaurantId = typeof rawId === "string" ? rawId : "";
-  const isValidId = /^[a-f\d]{24}$/i.test(restaurantId);
+  const restaurantId = String(params.id);
 
   const [granularity, setGranularity] = useState<TrendGranularity>("day");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const { data: overviewRes, isLoading: overviewLoading } = useGetFeedbackOverviewQuery(
+  const { data: overviewRes, isLoading: overviewLoading } =
+    useGetFeedbackOverviewQuery(restaurantId);
+  const { data: waitersRes, isLoading: waitersLoading } =
+    useGetWaiterPerformanceQuery(restaurantId);
+  const { data: distributionRes, isLoading: distributionLoading } =
+    useGetRatingDistributionQuery(restaurantId);
+  const { data: trendRes, isLoading: trendLoading } = useGetFeedbackTrendQuery({
     restaurantId,
-    { skip: !isValidId }
-  );
-  const { data: waitersRes, isLoading: waitersLoading } = useGetWaiterPerformanceQuery(
+    granularity,
+  });
+  const { data: evaluatorsRes, isLoading: evaluatorsLoading } = useGetEvaluatorsQuery({
     restaurantId,
-    { skip: !isValidId }
-  );
-  const { data: distributionRes, isLoading: distributionLoading } = useGetRatingDistributionQuery(
-    restaurantId,
-    { skip: !isValidId }
-  );
-  const { data: trendRes, isLoading: trendLoading } = useGetFeedbackTrendQuery(
-    { restaurantId, granularity },
-    { skip: !isValidId }
-  );
-  const { data: evaluatorsRes, isLoading: evaluatorsLoading } = useGetEvaluatorsQuery(
-    { restaurantId, page, pageSize },
-    { skip: !isValidId }
-  );
-
-  if (!isValidId) {
-    return (
-      <>
-        <Topbar title="Feedback analytics" />
-        <div className="px-8 py-6">
-          <Card className="border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-            No valid restaurant selected. Go back to the restaurants list and open one from there.
-          </Card>
-        </div>
-      </>
-    );
-  }
+    page,
+    pageSize,
+  });
 
   const overview = overviewRes?.data;
   const waiters = waitersRes?.data ?? [];
