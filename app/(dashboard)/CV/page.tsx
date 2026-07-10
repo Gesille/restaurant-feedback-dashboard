@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import {
     BriefcaseIcon,
@@ -12,6 +13,9 @@ import {
     PhoneIcon,
     Loader2Icon,
     InboxIcon,
+ 
+    ChevronLeftIcon,
+    ChevronRightIcon,
 } from "lucide-react";
 import BackgroundBlobs from "@/components/BackgroundBlobs";
 import {
@@ -20,6 +24,9 @@ import {
     useGetAllCVsQuery,
     useLazyDownloadCVQuery,
 } from "@/redux/careers/careersApi";
+import { FaLinkedin } from "react-icons/fa6";
+
+const PAGE_SIZE = 10;
 
 export default function AdminCvDashboard() {
     const [search, setSearch] = useState("");
@@ -94,12 +101,14 @@ export default function AdminCvDashboard() {
                             eyebrow="01"
                             empty="No one has applied to a specific role yet."
                             items={careerApplicants}
+                            resetKey={search}
                         />
                         <Section
                             title="General submissions"
                             eyebrow="02"
                             empty="No open CVs on file yet."
                             items={generalApplicants}
+                            resetKey={search}
                         />
                     </>
                 )}
@@ -127,12 +136,25 @@ function Section({
     eyebrow,
     empty,
     items,
+    resetKey,
 }: {
     title: string;
     eyebrow: string;
     empty: string;
     items: Applicant[];
+    resetKey: string;
 }) {
+    const [page, setPage] = useState(1);
+
+ 
+    useEffect(() => {
+        setPage(1);
+    }, [resetKey]);
+
+    const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pageItems = items.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
     return (
         <div className="mt-10">
             <div className="mb-4 flex items-baseline gap-3">
@@ -148,11 +170,45 @@ function Section({
                     {empty}
                 </div>
             ) : (
-                <div className="flex flex-col gap-3">
-                    {items.map((a) => (
-                        <ApplicantCard key={a.id} applicant={a} />
-                    ))}
-                </div>
+                <>
+                    <div className="flex flex-col gap-3">
+                        {pageItems.map((a) => (
+                            <ApplicantCard key={a.id} applicant={a} />
+                        ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-fuchsia-100 bg-white/70 px-4 py-2.5 text-xs text-slate-500">
+                            <span>
+                                Showing {(safePage - 1) * PAGE_SIZE + 1}–
+                                {Math.min(safePage * PAGE_SIZE, items.length)} of {items.length}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={safePage === 1}
+                                    className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                    aria-label="Previous page"
+                                >
+                                    <ChevronLeftIcon className="size-3.5" />
+                                </button>
+                                <span className="font-medium text-slate-700">
+                                    {safePage} / {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                    disabled={safePage === totalPages}
+                                    className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                    aria-label="Next page"
+                                >
+                                    <ChevronRightIcon className="size-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
@@ -182,13 +238,29 @@ function ApplicantCard({ applicant }: { applicant: Applicant }) {
                 </div>
 
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
+                    <a
+                        href={`mailto:${applicant.email}`}
+                        className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
+                    >
                         <MailIcon className="size-3.5" /> {applicant.email}
-                    </span>
+                    </a>
                     {applicant.phone && (
-                        <span className="flex items-center gap-1">
+                        <a
+                            href={`tel:${applicant.phone}`}
+                            className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
+                        >
                             <PhoneIcon className="size-3.5" /> {applicant.phone}
-                        </span>
+                        </a>
+                    )}
+                    {(applicant as any).linkedin && (
+                        <a
+                            href={(applicant as any).linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-fuchsia-600 hover:underline"
+                        >
+                            <FaLinkedin className="w-5 h-5 text-blue-600" />
+                        </a>
                     )}
                     <span>{new Date(applicant.submittedAt).toLocaleDateString()}</span>
                 </div>
