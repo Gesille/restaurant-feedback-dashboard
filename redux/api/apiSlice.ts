@@ -17,7 +17,7 @@ export const apiSlice = createApi({
     },
   }),
   tagTypes: ["Products","Users","Orders","Categories","Customers","Returns","Inventory","HeldOrders",
-    "CashCount","MonthlyReport","DailyReport","Taxes","PurchaseOrders","Suppliers","TaxReports","TaxExemptCustomers","TaxSettings",
+    "CashCount","MonthlyReport","DailyReport","Taxes","CV","Suppliers","TaxReports","TaxExemptCustomers","TaxSettings",
     "TaxHolidays"],
   endpoints: (builder) => ({
     refreshToken: builder.query({

@@ -32,6 +32,8 @@ export default function CvUploadSection() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
+    const [phone, setPhone] = useState("");
+const [linkedin, setLinkedin] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [submitCV] = useSubmitCVMutation();
@@ -68,13 +70,15 @@ export default function CvUploadSection() {
         try {
             const base64 = await fileToBase64(file);
 
-            await submitCV({
-                name,
-                email,
-                message,
-                cvFile: base64,
-                cvFileName: file.name,
-            }).unwrap();
+         await submitCV({
+    name,
+    email,
+    phone,
+    linkedin,
+    message,
+    cvFile: base64,
+    cvFileName: file.name,
+}).unwrap();
 
             setStatus("success");
         } catch (err: any) {
@@ -84,15 +88,16 @@ export default function CvUploadSection() {
             toast.error(msg);
         }
     };
-
-    const reset = () => {
-        setFile(null);
-        setName("");
-        setEmail("");
-        setMessage("");
-        setStatus("idle");
-        setErrorMsg("");
-    };
+const reset = () => {
+    setFile(null);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setLinkedin("");
+    setMessage("");
+    setStatus("idle");
+    setErrorMsg("");
+};
 
     return (
         <section
@@ -124,27 +129,48 @@ export default function CvUploadSection() {
                 ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         <div className="grid sm:grid-cols-2 gap-4">
-                            <Field label="Full name">
-                                <input
-                                    type="text"
-                                    placeholder="Jordan Lee"
-                                    required
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
-                                />
-                            </Field>
-                            <Field label="Email address">
-                                <input
-                                    type="email"
-                                    placeholder="jordan@email.com"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
-                                />
-                            </Field>
-                        </div>
+    <Field label="Full name">
+        <input
+            type="text"
+            placeholder="Jordan Lee"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
+        />
+    </Field>
+    <Field label="Email address">
+        <input
+            type="email"
+            placeholder="jordan@email.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
+        />
+    </Field>
+</div>
+
+<div className="grid sm:grid-cols-2 gap-4">
+    <Field label="Phone number (optional)">
+        <input
+            type="tel"
+            placeholder="+1 555 123 4567"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
+        />
+    </Field>
+    <Field label="LinkedIn profile (optional)">
+        <input
+            type="url"
+            placeholder="linkedin.com/in/jordanlee"
+            value={linkedin}
+            onChange={(e) => setLinkedin(e.target.value)}
+            className="w-full bg-transparent border border-neutral-200 rounded-lg px-4 py-3 text-sm outline-none transition placeholder:opacity-40 focus:border-current"
+        />
+    </Field>
+</div>
 
                         <Field label="Message to HR (optional)">
                             <textarea
