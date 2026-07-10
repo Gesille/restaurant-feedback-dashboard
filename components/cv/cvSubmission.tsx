@@ -274,6 +274,7 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
     const [assignError, setAssignError] = useState<string | null>(null);
     const [noteText, setNoteText] = useState("");
     const [assign, { isLoading: isAssigning }] = useAssignApplicantMutation();
+    const [updateStage, { isLoading: isUpdatingStage }] = useUpdateApplicantStageMutation();
     const [addNote, { isLoading: isAddingNote }] = useAddApplicantNoteMutation();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -284,14 +285,17 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
             setAssignError("Enter a valid email address");
             return;
         }
+        if (trimmed === (applicant.assignedTo || "")) return;
         setAssignError(null);
         try {
             await assign({ id: applicant.id, assignedTo: trimmed }).unwrap();
+            if (trimmed) {
+                await updateStage({ id: applicant.id, stage: "Reviewing" }).unwrap();
+            }
         } catch (err: any) {
             setAssignError(err?.data?.message || "Failed to assign");
         }
     };
-
     const handleAddNote = async () => {
         if (!noteText.trim()) return;
         await addNote({ id: applicant.id, text: noteText.trim(), author: "HR" })
@@ -299,8 +303,6 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
             .catch((err) => console.error("Add note failed:", err));
         setNoteText("");
     };
-
-    // ...rest unchanged until the "Assigned to" block
 
     return (
         <>
@@ -368,7 +370,7 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                                 assignError ? "border-red-300 focus:border-red-400" : "border-slate-200 focus:border-fuchsia-300"
                             }`}
                         />
-                        {isAssigning && <Loader2Icon className="size-4 shrink-0 animate-spin text-fuchsia-500" />}
+                      {(isAssigning || isUpdatingStage) && <Loader2Icon className="size-4 shrink-0 animate-spin text-fuchsia-500" />}
                     </div>
                     {assignError ? (
                         <p className="mt-1 text-xs text-red-600">{assignError}</p>
