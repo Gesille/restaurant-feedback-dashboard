@@ -20,7 +20,6 @@ export default function RestaurantDetailPage({ params }: { params: { id: string 
   return (
     <>
       <Topbar title={restaurant.name} subtitle="QR performance and table-level breakdown" />
-
       <div className="space-y-6 px-8 py-6">
         <Card className="p-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
