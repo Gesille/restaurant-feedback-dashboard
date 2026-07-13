@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -49,26 +48,21 @@ function StatCard({
   );
 }
 
-export default function RestaurantAnalyticsPage() {
-  const params = useParams();
-  const restaurantId = String(params.id);
-
+export default function AnalyticsPage() {
   const [granularity, setGranularity] = useState<TrendGranularity>("day");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const { data: overviewRes, isLoading: overviewLoading } =
-    useGetFeedbackOverviewQuery(restaurantId);
+    useGetFeedbackOverviewQuery();
   const { data: waitersRes, isLoading: waitersLoading } =
-    useGetWaiterPerformanceQuery(restaurantId);
+    useGetWaiterPerformanceQuery();
   const { data: distributionRes, isLoading: distributionLoading } =
-    useGetRatingDistributionQuery(restaurantId);
+    useGetRatingDistributionQuery();
   const { data: trendRes, isLoading: trendLoading } = useGetFeedbackTrendQuery({
-    restaurantId,
     granularity,
   });
   const { data: evaluatorsRes, isLoading: evaluatorsLoading } = useGetEvaluatorsQuery({
-    restaurantId,
     page,
     pageSize,
   });
@@ -86,7 +80,7 @@ export default function RestaurantAnalyticsPage() {
 
   return (
     <>
-      <Topbar title="Feedback analytics" subtitle="Ratings, evaluators, and trends for this restaurant." />
+      <Topbar title="Feedback analytics" subtitle="Ratings, evaluators, and trends across all restaurants." />
 
       <div className="space-y-6 px-8 py-6">
         {/* overview stat cards */}

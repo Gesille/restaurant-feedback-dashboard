@@ -95,50 +95,55 @@ type ApiEnvelope<T> = {
 
 export const analyticsApi = apiSlice.injectEndpoints({
   endpoints: (builder: EndpointBuilder<any, any, any>) => ({
-    getFeedbackOverview: builder.query<ApiEnvelope<OverviewStats>, string>({
-      query: (restaurantId: string) => ({
-        url: `analytics/${restaurantId}/overview`,
+    getFeedbackOverview: builder.query<ApiEnvelope<OverviewStats>, void>({
+      query: () => ({
+        url: `analytics/overview`,
         method: "GET",
         credentials: "include" as const,
       }),
     }),
 
-    getWaiterPerformance: builder.query<ApiEnvelope<WaiterPerformance[]>, string>({
-      query: (restaurantId: string) => ({
-        url: `analytics/${restaurantId}/waiters`,
+    getWaiterPerformance: builder.query<ApiEnvelope<WaiterPerformance[]>, void>({
+      query: () => ({
+        url: `analytics/waiters`,
         method: "GET",
         credentials: "include" as const,
       }),
     }),
 
-    getRatingDistribution: builder.query<ApiEnvelope<RatingDistributionEntry[]>, string>({
-      query: (restaurantId: string) => ({
-        url: `analytics/${restaurantId}/distribution`,
+    getRatingDistribution: builder.query<ApiEnvelope<RatingDistributionEntry[]>, void>({
+      query: () => ({
+        url: `analytics/distribution`,
         method: "GET",
         credentials: "include" as const,
       }),
     }),
 
-    getEvaluators: builder.query<
+       getEvaluators: builder.query<
       ApiEnvelope<EvaluatorsPage>,
-      { restaurantId: string; page?: number; pageSize?: number }
+      { page?: number; pageSize?: number } | void
     >({
-      query: ({ restaurantId, page = 1, pageSize = 20 }) => ({
-        url: `analytics/${restaurantId}/evaluators?page=${page}&pageSize=${pageSize}`,
-        method: "GET",
-        credentials: "include" as const,
-      }),
+      query: (arg) => {
+        const { page = 1, pageSize = 20 } = arg ?? {};
+        return {
+          url: `analytics/evaluators?page=${page}&pageSize=${pageSize}`,
+          method: "GET",
+          credentials: "include" as const,
+        };
+      },
     }),
-
-    getFeedbackTrend: builder.query<
+getFeedbackTrend: builder.query<
       ApiEnvelope<TrendPoint[]>,
-      { restaurantId: string; granularity?: TrendGranularity }
+      { granularity?: TrendGranularity } | void
     >({
-      query: ({ restaurantId, granularity = "day" }) => ({
-        url: `analytics/${restaurantId}/trend?granularity=${granularity}`,
-        method: "GET",
-        credentials: "include" as const,
-      }),
+      query: (arg) => {
+        const { granularity = "day" } = arg ?? {};
+        return {
+          url: `analytics/trend?granularity=${granularity}`,
+          method: "GET",
+          credentials: "include" as const,
+        };
+      },
     }),
   }),
 });
