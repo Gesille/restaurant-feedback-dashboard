@@ -1,132 +1,164 @@
+// app/(dashboard)/analytics/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { Download, Palette } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { useGetEvaluatorsQuery, useGetOverviewQuery, useGetRatingDistributionQuery, useGetTrendQuery, useGetWaiterPerformanceQuery } from "@/redux/analytics/feedbackAnalyticsApi";
+import { useGetAllRestaurantsQuery } from "@/redux/restaurants/restaurantApi";
+import { useState } from "react";
 
-import { brand, BrandColor } from "@/lib/colors";
-import { restaurantsData } from "@/data/restaurants";
 
-const qrTypes = [
-  { id: "menu", label: "Full menu" },
-  { id: "table", label: "Table order" },
-  { id: "feedback", label: "Feedback form" },
-  { id: "delivery", label: "Delivery tag" },
-];
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from "recharts";
 
-const swatches: { color: BrandColor; hex: string }[] = [
-  { color: "violet", hex: brand.violet.solid },
-  { color: "teal", hex: brand.teal.solid },
-  { color: "coral", hex: brand.coral.solid },
-  { color: "amber", hex: brand.amber.solid },
-  { color: "blue", hex: brand.blue.solid },
-  { color: "pink", hex: brand.pink.solid },
-];
+export default function RestaurantAnalyticsPage() {
+  const { data: restaurantsRes, isLoading: loadingRestaurants } = useGetAllRestaurantsQuery();
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
-export function QRGeneratorPanel({ defaultRestaurantId }: { defaultRestaurantId?: string }) {
-  const initialId =
-    restaurantsData.find((r) => r.id === defaultRestaurantId)?.id ?? restaurantsData[0].id;
+  const skip = !restaurantId;
 
-  const [restaurantId, setRestaurantId] = useState(initialId);
-  const [type, setType] = useState(qrTypes[0].id);
-  const [tableNumber, setTableNumber] = useState(1);
-  const [fg, setFg] = useState(swatches[0].hex);
+  const { data: overviewRes, isLoading: loadingOverview } = useGetOverviewQuery(restaurantId!, { skip });
+  const { data: waiterRes } = useGetWaiterPerformanceQuery(restaurantId!, { skip });
+  const { data: distRes } = useGetRatingDistributionQuery(restaurantId!, { skip });
+  const { data: trendRes } = useGetTrendQuery({ restaurantId: restaurantId! }, { skip });
+  const { data: evalRes } = useGetEvaluatorsQuery({ restaurantId: restaurantId! }, { skip });
 
-  const restaurant = restaurantsData.find((r) => r.id === restaurantId) ?? restaurantsData[0];
-
-  const value = useMemo(() => {
-    const base = restaurant.qrValue;
-    if (type === "table") return `${base}/table/${tableNumber}`;
-    return `${base}/${type}`;
-  }, [restaurant, type, tableNumber]);
+  const restaurants = restaurantsRes?.data ?? [];
+  const overview = overviewRes?.data;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <Card className="p-6">
-        <h3 className="text-sm font-semibold text-slate-900">Configure QR code</h3>
-        <p className="text-xs text-slate-400">Choose a restaurant, what it links to, and a brand color.</p>
-
-        <div className="mt-5">
-          <label className="text-xs font-medium text-slate-600">Restaurant</label>
-          <select
-            value={restaurantId}
-            onChange={(e) => setRestaurantId(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+    <div className="p-6 space-y-6">
+      {/* Restaurant picker */}
+      <div className="flex flex-wrap gap-3">
+        {loadingRestaurants && <span>Loading restaurants…</span>}
+        {restaurants.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => setRestaurantId(r.id)}
+            className={`px-4 py-2 rounded-full border text-sm transition ${
+              restaurantId === r.id
+                ? "bg-black text-white border-black"
+                : "border-gray-300 hover:border-black"
+            }`}
           >
-            {restaurantsData.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </div>
+            {r.x_name}
+          </button>
+        ))}
+      </div>
 
-        <div className="mt-4">
-          <label className="text-xs font-medium text-slate-600">QR destination</label>
-          <div className="mt-1.5 grid grid-cols-2 gap-2">
-            {qrTypes.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setType(t.id)}
-                className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-                  type === t.id
-                    ? "border-violet-300 bg-violet-50 text-violet-700"
-                    : "border-slate-200 text-slate-500 hover:bg-slate-50"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      {!restaurantId && (
+        <p className="text-gray-500">Select a restaurant to see its analytics.</p>
+      )}
 
-        {type === "table" && (
-          <div className="mt-4">
-            <label className="text-xs font-medium text-slate-600">Table number</label>
-            <input
-              type="number"
-              min={1}
-              max={restaurant.tables}
-              value={tableNumber}
-              onChange={(e) => setTableNumber(Number(e.target.value))}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+      {restaurantId && loadingOverview && <p>Loading analytics…</p>}
+
+      {restaurantId && overview && (
+        <>
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard label="Total Feedbacks" value={overview.totalFeedbacks} />
+            <StatCard label="Avg Overall" value={overview.averages.overall_rating ?? 0} />
+            <StatCard
+              label="Would Recommend"
+              value={`${(overview.recommendationPercentage["Very Likely"] ?? 0) +
+                (overview.recommendationPercentage["Likely"] ?? 0)}%`}
+            />
+            <StatCard
+              label="Last Feedback"
+              value={overview.lastFeedbackAt ? new Date(overview.lastFeedbackAt).toLocaleDateString() : "—"}
             />
           </div>
-        )}
 
-        <div className="mt-4">
-          <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-            <Palette size={13} /> Brand color
-          </label>
-          <div className="mt-2 flex gap-2">
-            {swatches.map((s) => (
-              <button
-                key={s.hex}
-                onClick={() => setFg(s.hex)}
-                className="h-8 w-8 rounded-full ring-2 ring-offset-2 transition-transform hover:scale-105"
-                style={{
-                  backgroundColor: s.hex,
-                  boxShadow: fg === s.hex ? `0 0 0 2px white, 0 0 0 4px ${s.hex}` : undefined,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </Card>
+          {/* Trend chart */}
+          {trendRes?.data && (
+            <div className="h-72 bg-white rounded-xl p-4 border">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendRes.data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="bucket" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 5]} />
+                  <Tooltip />
+                  <Line yAxisId="left" type="monotone" dataKey="feedbackCount" stroke="#1a1a1a" />
+                  <Line yAxisId="right" type="monotone" dataKey="averageOverallRating" stroke="#C9A227" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      <Card className="flex flex-col items-center justify-center gap-5 p-6">
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <QRCodeSVG value={value} size={192} fgColor={fg} />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-slate-900">{restaurant.name}</p>
-          <p className="max-w-[220px] truncate text-xs text-slate-400">{value}</p>
-        </div>
-        <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
-          <Download size={16} /> Download PNG
-        </button>
-      </Card>
+          {/* Waiter performance */}
+          {waiterRes?.data && (
+            <div className="bg-white rounded-xl border p-4">
+              <h3 className="font-semibold mb-3">Waiter Performance</h3>
+              <div className="space-y-2">
+                {waiterRes.data.map((w) => (
+                  <div key={w.waiter_name} className="flex justify-between text-sm border-b py-2">
+                    <span>{w.waiter_name}</span>
+                    <span>{w.feedbackCount} reviews</span>
+                    <span>{w.averages.overall_rating} ★</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rating distribution (overall only, expand as needed) */}
+          {distRes?.data && (
+            <div className="h-64 bg-white rounded-xl p-4 border">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={Object.entries(
+                    distRes.data.find((d) => d.field === "overall_rating")?.distribution ?? {}
+                  ).map(([star, count]) => ({ star, count }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="star" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#C9A227" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Evaluators table */}
+          {evalRes?.data && (
+            <div className="bg-white rounded-xl border p-4 overflow-x-auto">
+              <h3 className="font-semibold mb-3">Recent Evaluators</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500">
+                    <th className="py-2">Name</th>
+                    <th>Waiter</th>
+                    <th>Rating</th>
+                    <th>Recommendation</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {evalRes.data.data.map((e) => (
+                    <tr key={e.id} className="border-t">
+                      <td className="py-2">{e.customer_name}</td>
+                      <td>{e.waiter_name}</td>
+                      <td>{e.overall_rating} ★</td>
+                      <td>{e.recommendation}</td>
+                      <td>{new Date(e.date).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-white rounded-xl border p-4">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-2xl font-bold">{value}</div>
     </div>
   );
 }

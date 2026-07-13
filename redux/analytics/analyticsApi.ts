@@ -103,15 +103,20 @@ export const analyticsApi = apiSlice.injectEndpoints({
       }),
     }),
 
-    getWaiterPerformance: builder.query<ApiEnvelope<WaiterPerformance[]>, void>({
-      query: () => ({
-        url: `analytics/waiters`,
-        method: "GET",
-        credentials: "include" as const,
-      }),
-    }),
+    getWaiterPerformance: builder.query<ApiEnvelope<WaiterPerformance[]>, void>(
+      {
+        query: () => ({
+          url: `analytics/waiters`,
+          method: "GET",
+          credentials: "include" as const,
+        }),
+      },
+    ),
 
-    getRatingDistribution: builder.query<ApiEnvelope<RatingDistributionEntry[]>, void>({
+    getRatingDistribution: builder.query<
+      ApiEnvelope<RatingDistributionEntry[]>,
+      void
+    >({
       query: () => ({
         url: `analytics/distribution`,
         method: "GET",
@@ -119,7 +124,7 @@ export const analyticsApi = apiSlice.injectEndpoints({
       }),
     }),
 
-       getEvaluators: builder.query<
+    getEvaluators: builder.query<
       ApiEnvelope<EvaluatorsPage>,
       { page?: number; pageSize?: number } | void
     >({
@@ -132,7 +137,7 @@ export const analyticsApi = apiSlice.injectEndpoints({
         };
       },
     }),
-getFeedbackTrend: builder.query<
+    getFeedbackTrend: builder.query<
       ApiEnvelope<TrendPoint[]>,
       { granularity?: TrendGranularity } | void
     >({
@@ -145,6 +150,7 @@ getFeedbackTrend: builder.query<
         };
       },
     }),
+    
   }),
 });
 

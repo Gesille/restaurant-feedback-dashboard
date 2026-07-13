@@ -104,6 +104,7 @@ export interface IRestaurant {
   tables: number;
   menuViews: number;
   scansToday: number;
+x_qr_generated?: boolean;
 }
 
 export type ScanPoint = {

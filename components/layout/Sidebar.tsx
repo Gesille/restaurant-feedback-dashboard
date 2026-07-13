@@ -9,7 +9,7 @@ import { motion, type Variants } from "framer-motion";
 import {
   LayoutGrid,
   UtensilsCrossed,
-  QrCode,
+  
   BarChart3,
   Settings,
   ScanLine,
@@ -17,6 +17,7 @@ import {
   FileBarChart,
   ChevronLeft,
   ChevronRight,
+  FileChartPie,
 } from "lucide-react";
 
 
@@ -26,7 +27,7 @@ import { useSelector } from "react-redux";
 const mainNav: { href: string; label: string; icon: any; color: BrandColor; badge?: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "violet" },
   { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed, color: "teal" },
-  { href: "/qr-generator", label: "QR Codes", icon: QrCode, color: "amber", badge: "12" },
+  { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber", badge: "12" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, color: "pink" },
 ];
 

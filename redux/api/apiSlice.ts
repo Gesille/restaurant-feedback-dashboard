@@ -17,7 +17,7 @@ export const apiSlice = createApi({
     },
   }),
   tagTypes: ["Restaurant","Users","Feedback","FeedbackStats","Customers"
-    ,"Taxes","CV","Analytics"
+    ,"Taxes","CV","Analytics","RestaurantsWithoutQr","FeedbackAnalytics",
     ],
   endpoints: (builder) => ({
     refreshToken: builder.query({

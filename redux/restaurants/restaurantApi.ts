@@ -5,6 +5,8 @@ export type Restaurant = {
   x_name: string;
   x_location: string;
   x_manager_email: string;
+  x_qr_token: string;
+  x_qr_generated: boolean;
 };
 
 type CreateRestaurantData = {
@@ -43,6 +45,12 @@ type ResolveQrTokenResponse = {
   data: ResolvedQrRestaurant;
 };
 
+export type GenerateQrResponse = {
+  success: boolean;
+  message?: string;
+  data: { id: string; name: string; dataUrl: string; feedbackUrl: string };
+};
+
 export const restaurantApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllRestaurants: builder.query<GetAllRestaurantsResponse, void>({
@@ -71,6 +79,24 @@ export const restaurantApi = apiSlice.injectEndpoints({
         credentials: "include" as const,
       }),
       invalidatesTags: ["Restaurant"],
+    }),
+
+    getRestaurantsWithoutQr: builder.query<GetAllRestaurantsResponse, void>({
+      query: () => ({
+        url: "restaurants/without-qr",
+        method: "GET",
+        credentials: "include" as const,
+      }),
+      providesTags: ["RestaurantsWithoutQr"],
+    }),
+
+    generateQr: builder.mutation<GenerateQrResponse, string>({
+      query: (id) => ({
+        url: `restaurants/${id}/qr/generate`,
+        method: "POST",
+        credentials: "include" as const,
+      }),
+      invalidatesTags: ["RestaurantsWithoutQr", "Restaurant"],
     }),
 
     // --- QR endpoints ---
@@ -117,6 +143,8 @@ export const {
   useGetRestaurantByIdQuery,
   useLazyGetRestaurantByIdQuery,
   useCreateRestaurantMutation,
+  useGetRestaurantsWithoutQrQuery,
+  useGenerateQrMutation,
   useLazyGetQrImageQuery,
   useResolveQrTokenQuery,
   useLazyResolveQrTokenQuery,
