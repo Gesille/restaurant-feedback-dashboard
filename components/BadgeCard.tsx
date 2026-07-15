@@ -5,7 +5,7 @@ import { motion, useAnimate, useInView } from "motion/react";
 import { IFeature } from "@/types";
 
 const FAN_ANGLES = [-6, 3, -3, 5, -4, 2];
-const SWAY_DURATIONS = [4.2, 5.1, 3.8, 4.7, 5.4, 4.0]; // different per card so sway isn't synced
+const SWAY_DURATIONS = [4.2, 5.1, 3.8, 4.7, 5.4, 4.0];
 
 export default function BadgeCard({ feature, index }: { feature: IFeature; index: number }) {
     const cardRef = useRef<HTMLDivElement>(null);

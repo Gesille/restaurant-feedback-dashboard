@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -10,20 +11,15 @@ import {
     CheckCircle2Icon,
     Loader2Icon,
     FileTextIcon,
+    BuildingIcon,
+    MailIcon,
+    PhoneIcon,
+    CalendarIcon,
+   
 } from "lucide-react";
-
-type Job = {
-    id: string;
-    title: string;
-    department: string;
-    location: string;
-    type: "Full-time" | "Part-time" | "Contract";
-    postedAt: string;
-    summary: string;
-    responsibilities: string[];
-    requirements: string[];
-    niceToHave?: string[];
-};
+import DOMPurify from "dompurify";
+import type { Job } from "@/types";
+import { useApplyToJobMutation, useGetAllJobsQuery } from "@/redux/jods/jobApi";
 
 type ApplicationForm = {
     firstName: string;
@@ -53,175 +49,25 @@ const DEPARTMENT_COLORS: Record<string, string> = {
     Sales: "from-fuchsia-600 to-purple-600",
 };
 
-const JOBS: Job[] = [
-    {
-        id: "job-1",
-        title: "Senior Frontend Engineer",
-        department: "Engineering",
-        location: "San Juan, PR",
-        type: "Full-time",
-        postedAt: "Jul 1, 2026",
-        summary:
-            "Own the frontend of our restaurant platform, working closely with design and backend to ship fast, accessible interfaces used by thousands of restaurants every day.",
-        responsibilities: [
-            "Build and maintain customer-facing features in React and TypeScript",
-            "Partner with design to turn Figma files into polished, responsive UI",
-            "Improve performance, accessibility, and test coverage across the app",
-            "Mentor mid-level engineers through code review and pairing",
-        ],
-        requirements: [
-            "5+ years building production React applications",
-            "Strong TypeScript and modern CSS fundamentals",
-            "Experience shipping accessible, responsive interfaces",
-        ],
-        niceToHave: ["Experience with Next.js", "Familiarity with design systems"],
-    },
-    {
-        id: "job-2",
-        title: "Product Designer",
-        department: "Design",
-        location: "Remote (AST)",
-        type: "Full-time",
-        postedAt: "Jun 28, 2026",
-        summary:
-            "Shape the end-to-end experience for restaurant owners and diners, from first onboarding screen to daily-use dashboards.",
-        responsibilities: [
-            "Lead design for a product area from research through shipped UI",
-            "Run lightweight user research and usability testing",
-            "Maintain and extend our design system in Figma",
-            "Collaborate directly with engineers during implementation",
-        ],
-        requirements: [
-            "4+ years of product design experience, ideally B2B SaaS",
-            "A strong portfolio showing end-to-end process, not just polish",
-            "Comfort working directly with engineers day-to-day",
-        ],
-    },
-    {
-        id: "job-3",
-        title: "Restaurant Onboarding Specialist",
-        department: "Operations",
-        location: "Miami, FL",
-        type: "Full-time",
-        postedAt: "Jun 25, 2026",
-        summary:
-            "Be the first point of contact for new restaurant partners, guiding them from signed contract to a fully live, working account.",
-        responsibilities: [
-            "Run onboarding calls and menu setup sessions with new restaurants",
-            "Troubleshoot setup issues and coordinate with support and engineering",
-            "Track onboarding milestones and flag at-risk accounts early",
-            "Gather feedback to improve the onboarding playbook",
-        ],
-        requirements: [
-            "1-2 years in a customer-facing onboarding, support, or account role",
-            "Comfortable on the phone and managing multiple accounts at once",
-            "Restaurant or hospitality background is a plus, not required",
-        ],
-    },
-    {
-        id: "job-4",
-        title: "Customer Success Associate",
-        department: "Customer Success",
-        location: "Remote (US)",
-        type: "Full-time",
-        postedAt: "Jun 22, 2026",
-        summary:
-            "Support our existing restaurant partners after launch, helping them get more value out of the platform and resolving issues quickly.",
-        responsibilities: [
-            "Own a portfolio of accounts and be their main point of contact",
-            "Answer product questions over email, chat, and scheduled calls",
-            "Spot renewal risk and loop in the account management team early",
-            "Document recurring issues and feed them back to product",
-        ],
-        requirements: [
-            "1+ years in customer success, support, or account management",
-            "Clear written communication and patience with non-technical users",
-        ],
-    },
-    {
-        id: "job-5",
-        title: "Account Executive",
-        department: "Sales",
-        location: "New York, NY",
-        type: "Full-time",
-        postedAt: "Jun 20, 2026",
-        summary:
-            "Drive new business by running the full sales cycle with restaurant groups, from first demo to signed contract.",
-        responsibilities: [
-            "Run product demos and manage a pipeline of qualified restaurant leads",
-            "Negotiate contract terms and close new business",
-            "Work with marketing on messaging that resonates with restaurant owners",
-            "Keep CRM data accurate and forecast pipeline reliably",
-        ],
-        requirements: [
-            "2+ years of closing experience in a full-cycle sales role",
-            "Track record of hitting or exceeding quota",
-            "Experience selling to SMB or hospitality is a plus",
-        ],
-    },
-    {
-        id: "job-6",
-        title: "Backend Engineer",
-        department: "Engineering",
-        location: "Remote (AST)",
-        type: "Contract",
-        postedAt: "Jun 18, 2026",
-        summary:
-            "Help scale the systems behind order processing and payments as restaurant volume keeps growing.",
-        responsibilities: [
-            "Design and build reliable APIs and background services",
-            "Improve database performance under real production load",
-            "Work with the platform team on observability and on-call practices",
-        ],
-        requirements: [
-            "3+ years building backend services in a modern language (Node, Go, or similar)",
-            "Comfort with relational databases and query optimization",
-            "Available for a 6-month contract with potential to extend",
-        ],
-    },
-    {
-        id: "job-7",
-        title: "Field Operations Coordinator",
-        department: "Operations",
-        location: "Orlando, FL",
-        type: "Part-time",
-        postedAt: "Jun 15, 2026",
-        summary:
-            "Support in-person setup visits and hardware installs for restaurants going live in the Central Florida region.",
-        responsibilities: [
-            "Visit restaurant locations to install and test hardware",
-            "Coordinate scheduling with the onboarding team",
-            "Provide light in-person training to restaurant staff",
-        ],
-        requirements: [
-            "Reliable transportation and flexible daytime availability",
-            "Comfortable troubleshooting hardware and Wi-Fi setups",
-        ],
-    },
-    {
-        id: "job-8",
-        title: "Visual Designer",
-        department: "Design",
-        location: "San Juan, PR",
-        type: "Contract",
-        postedAt: "Jun 10, 2026",
-        summary:
-            "Bring a strong visual point of view to marketing pages, product illustrations, and campaign assets over a focused three-month engagement.",
-        responsibilities: [
-            "Design landing pages, email campaigns, and social assets",
-            "Create simple illustrations and icons consistent with the brand",
-            "Work closely with the product designer to keep visual language consistent",
-        ],
-        requirements: [
-            "Strong portfolio in visual and brand design",
-            "Fluent in Figma and modern illustration tools",
-            "Available for a 3-month contract",
-        ],
-    },
-];
+function timeAgo(dateStr: string): string {
+    const date = new Date(dateStr);
+    const diffMs = Date.now() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return "today";
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 30) return `${diffDays} days ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-const DEPARTMENTS = ["All departments", ...Array.from(new Set(JOBS.map((j) => j.department)))];
-const LOCATIONS = ["All locations", ...Array.from(new Set(JOBS.map((j) => j.location)))];
+function formatDate(dateStr?: string | null): string | null {
+    if (!dateStr) return null;
+    return new Date(dateStr).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
 
 function ApplicationModal({
     job,
@@ -235,8 +81,10 @@ function ApplicationModal({
     const [step, setStep] = useState<"details" | "form">("details");
     const [form, setForm] = useState<ApplicationForm>(EMPTY_FORM);
     const [errors, setErrors] = useState<Partial<Record<keyof ApplicationForm, string>>>({});
-    const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
     const [dragOver, setDragOver] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    const [applyToJob, { isLoading: isSubmitting, isSuccess }] = useApplyToJobMutation();
 
     const update = <K extends keyof ApplicationForm>(key: K, value: ApplicationForm[K]) => {
         setForm((f) => ({ ...f, [key]: value }));
@@ -255,15 +103,25 @@ function ApplicationModal({
         return Object.keys(next).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitError(null);
         if (!validate()) return;
-        setStatus("submitting");
-        // Simulate submission to an ATS/backend (e.g. Odoo Recruitment)
-        setTimeout(() => {
-            setStatus("done");
+
+        const formData = new FormData();
+        formData.append("name", `${form.firstName.trim()} ${form.lastName.trim()}`);
+        formData.append("email", form.email.trim());
+        formData.append("phone", form.phone.trim());
+        if (form.linkedin.trim()) formData.append("linkedin", form.linkedin.trim());
+        if (form.coverLetter.trim()) formData.append("message", form.coverLetter.trim());
+        formData.append("resume", form.resume as File);
+
+        try {
+            await applyToJob({ jobId: job.id, formData }).unwrap();
             onSubmitted(job.id);
-        }, 1100);
+        } catch (err: any) {
+            setSubmitError(err?.data?.message || "Failed to submit application. Please try again.");
+        }
     };
 
     const handleFile = (file: File | null) => {
@@ -276,8 +134,15 @@ function ApplicationModal({
             setErrors((e) => ({ ...e, resume: "Only PDF or Word files are accepted" }));
             return;
         }
+        if (file.size > 10 * 1024 * 1024) {
+            setErrors((e) => ({ ...e, resume: "File must be under 10MB" }));
+            return;
+        }
         update("resume", file);
     };
+
+    
+    const closingLabel = formatDate((job as any).closing_date);
 
     return (
         <motion.div
@@ -304,7 +169,7 @@ function ApplicationModal({
                 </button>
 
                 <AnimatePresence mode="wait">
-                    {status === "done" ? (
+                    {isSuccess ? (
                         <motion.div
                             key="done"
                             initial={{ opacity: 0 }}
@@ -316,7 +181,7 @@ function ApplicationModal({
                                 initial={{ scale: 0.6, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.05 }}
-                                className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600"
+                                className="flex size-16 items-center justify-center rounded-full bg-linear-to-br from-pink-500 via-fuchsia-600 to-purple-600"
                             >
                                 <CheckCircle2Icon className="size-8 text-white" />
                             </motion.div>
@@ -332,7 +197,7 @@ function ApplicationModal({
                             </p>
                             <button
                                 onClick={onClose}
-                                className="mt-8 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-95"
+                                className="mt-8 rounded-full bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-95"
                             >
                                 Done
                             </button>
@@ -345,86 +210,155 @@ function ApplicationModal({
                             exit={{ opacity: 0 }}
                         >
                             {/* Header */}
-                            <div className="border-b border-fuchsia-100 bg-gradient-to-br from-fuchsia-50/70 to-white px-8 pb-6 pt-8">
+                            <div className="border-b border-fuchsia-100 bg-linear-to-br from-fuchsia-50/70 to-white px-8 pb-6 pt-8">
                                 <span
-                                    className={`inline-block rounded-full bg-gradient-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
-                                        DEPARTMENT_COLORS[job.department] ?? "from-slate-500 to-slate-600"
+                                    className={`inline-block rounded-full bg-linear-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
+                                        DEPARTMENT_COLORS[job.department ?? ""] ?? "from-slate-500 to-slate-600"
                                     }`}
                                 >
                                     {job.department}
                                 </span>
+
                                 <h2 className="mt-3 text-xl font-semibold text-slate-900">
                                     {job.title}
                                 </h2>
-                                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+
+                                {((job as any).restaurant_name || (job as any).position) && (
+                                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                        <BuildingIcon className="size-3.5" />
+                                        {(job as any).restaurant_name}
+                                        {(job as any).restaurant_name && (job as any).position && " · "}
+                                        {(job as any).position}
+                                    </p>
+                                )}
+
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
                                     <span className="flex items-center gap-1">
                                         <MapPinIcon className="size-3.5" />
                                         {job.location}
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <BriefcaseIcon className="size-3.5" />
-                                        {job.type}
+                                        {job.employment_type}
                                     </span>
-                                    <span>Posted {job.postedAt}</span>
+                                    <span className="flex items-center gap-1">
+                                        <CalendarIcon className="size-3.5" />
+                                        Posted {timeAgo(job.createdAt)}
+                                    </span>
+                                  
+                                    {closingLabel && (
+                                        <span className="flex items-center gap-1">
+                                            Closes {closingLabel}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Description */}
                             <div className="max-h-[60vh] overflow-y-auto px-8 py-6">
-                                <p className="text-sm leading-relaxed text-slate-600">
-                                    {job.summary}
-                                </p>
+                                <div
+                                    className="prose prose-sm max-w-none text-sm leading-relaxed text-slate-600 prose-p:my-2"
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(job.description ?? ""),
+                                    }}
+                                />
 
-                                <div className="mt-6">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                        What you&apos;ll do
-                                    </h3>
-                                    <ul className="mt-2.5 space-y-2">
-                                        {job.responsibilities.map((item, idx) => (
-                                            <li
-                                                key={idx}
-                                                className="flex gap-2.5 text-sm leading-relaxed text-slate-700"
-                                            >
-                                                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-fuchsia-400" />
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="mt-6">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                        What we&apos;re looking for
-                                    </h3>
-                                    <ul className="mt-2.5 space-y-2">
-                                        {job.requirements.map((item, idx) => (
-                                            <li
-                                                key={idx}
-                                                className="flex gap-2.5 text-sm leading-relaxed text-slate-700"
-                                            >
-                                                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-fuchsia-400" />
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {job.niceToHave && job.niceToHave.length > 0 && (
+                                {job.responsibilities?.length > 0 && (
                                     <div className="mt-6">
                                         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                            Nice to have
+                                            What you&apos;ll do
                                         </h3>
                                         <ul className="mt-2.5 space-y-2">
-                                            {job.niceToHave.map((item, idx) => (
+                                            {job.responsibilities.map((item, idx) => (
                                                 <li
                                                     key={idx}
                                                     className="flex gap-2.5 text-sm leading-relaxed text-slate-700"
                                                 >
                                                     <span className="mt-2 size-1.5 shrink-0 rounded-full bg-fuchsia-400" />
-                                                    {item}
+                                                    <span
+                                                        className="prose prose-sm max-w-none prose-p:my-0"
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: DOMPurify.sanitize(item),
+                                                        }}
+                                                    />
                                                 </li>
                                             ))}
                                         </ul>
+                                    </div>
+                                )}
+
+                                {job.requirements?.length > 0 && (
+                                    <div className="mt-6">
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                            What we&apos;re looking for
+                                        </h3>
+                                        <ul className="mt-2.5 space-y-2">
+                                            {job.requirements.map((item, idx) => (
+                                                <li
+                                                    key={idx}
+                                                    className="flex gap-2.5 text-sm leading-relaxed text-slate-700"
+                                                >
+                                                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-fuchsia-400" />
+                                                    <span
+                                                        className="prose prose-sm max-w-none prose-p:my-0"
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: DOMPurify.sanitize(item),
+                                                        }}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {job.keywords?.length > 0 && (
+                                    <div className="mt-6">
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                            Nice to have
+                                        </h3>
+                                        <ul className="mt-2.5 space-y-2">
+                                            {job.keywords.map((item, idx) => (
+                                                <li
+                                                    key={idx}
+                                                    className="flex gap-2.5 text-sm leading-relaxed text-slate-700"
+                                                >
+                                                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-fuchsia-400" />
+                                                    <span
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: DOMPurify.sanitize(item),
+                                                        }}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {((job as any).contact_email || (job as any).contact_phone) && (
+                                    <div className="mt-6 rounded-xl bg-fuchsia-50/60 px-4 py-3">
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                            Contact
+                                        </h3>
+                                        <div className="mt-2 flex flex-col gap-1.5">
+                                            {(job as any).contact_email && (
+                                                <a
+                                                    href={`mailto:${(job as any).contact_email}`}
+                                                    className="flex items-center gap-1.5 text-sm text-slate-700 hover:text-fuchsia-700"
+                                                >
+                                                    <MailIcon className="size-3.5" />
+                                                    {(job as any).contact_email}
+                                                </a>
+                                            )}
+                                            {(job as any).contact_phone && (
+                                                <a
+                                                    href={`tel:${(job as any).contact_phone}`}
+                                                    className="flex items-center gap-1.5 text-sm text-slate-700 hover:text-fuchsia-700"
+                                                >
+                                                    <PhoneIcon className="size-3.5" />
+                                                    {(job as any).contact_phone}
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -433,7 +367,7 @@ function ApplicationModal({
                             <div className="border-t border-fuchsia-100 bg-white px-8 py-5">
                                 <button
                                     onClick={() => setStep("form")}
-                                    className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:brightness-110 active:scale-95"
+                                    className="flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:brightness-110 active:scale-95"
                                 >
                                     Apply for this role
                                 </button>
@@ -447,7 +381,7 @@ function ApplicationModal({
                             exit={{ opacity: 0 }}
                         >
                             {/* Header */}
-                            <div className="border-b border-fuchsia-100 bg-gradient-to-br from-fuchsia-50/70 to-white px-8 pb-6 pt-8">
+                            <div className="border-b border-fuchsia-100 bg-linear-to-br from-fuchsia-50/70 to-white px-8 pb-6 pt-8">
                                 <button
                                     onClick={() => setStep("details")}
                                     className="mb-2 text-xs font-medium text-fuchsia-600 hover:text-fuchsia-700"
@@ -455,8 +389,8 @@ function ApplicationModal({
                                     ← Back to job details
                                 </button>
                                 <span
-                                    className={`inline-block rounded-full bg-gradient-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
-                                        DEPARTMENT_COLORS[job.department] ?? "from-slate-500 to-slate-600"
+                                    className={`inline-block rounded-full bg-linear-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
+                                        DEPARTMENT_COLORS[job.department ?? ""] ?? "from-slate-500 to-slate-600"
                                     }`}
                                 >
                                     {job.department}
@@ -471,7 +405,7 @@ function ApplicationModal({
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <BriefcaseIcon className="size-3.5" />
-                                        {job.type}
+                                        {job.employment_type}
                                     </span>
                                 </div>
                             </div>
@@ -583,12 +517,16 @@ function ApplicationModal({
                                     </Field>
                                 </div>
 
+                                {submitError && (
+                                    <p className="mt-4 text-center text-xs font-medium text-red-500">{submitError}</p>
+                                )}
+
                                 <button
                                     type="submit"
-                                    disabled={status === "submitting"}
-                                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:brightness-110 active:scale-95 disabled:opacity-70"
+                                    disabled={isSubmitting}
+                                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:brightness-110 active:scale-95 disabled:opacity-70"
                                 >
-                                    {status === "submitting" ? (
+                                    {isSubmitting ? (
                                         <>
                                             <Loader2Icon className="size-4 animate-spin" />
                                             Submitting application...
@@ -645,14 +583,27 @@ export default function CareersPage() {
     const [activeJob, setActiveJob] = useState<Job | null>(null);
     const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
+    // Company-wide careers page: open roles across every restaurant.
+    const { data, isLoading, isError } = useGetAllJobsQuery({ status: "open", limit: 100 });
+    const jobs = useMemo(() => data?.jobs ?? [], [data]);
+
+    const departments = useMemo(
+        () => ["All departments", ...Array.from(new Set(jobs.map((j) => j.department).filter(Boolean) as string[]))],
+        [jobs],
+    );
+    const locations = useMemo(
+        () => ["All locations", ...Array.from(new Set(jobs.map((j) => j.location).filter(Boolean) as string[]))],
+        [jobs],
+    );
+
     const filtered = useMemo(() => {
-        return JOBS.filter((job) => {
+        return jobs.filter((job) => {
             const matchesSearch = job.title.toLowerCase().includes(search.trim().toLowerCase());
             const matchesDept = department === "All departments" || job.department === department;
             const matchesLoc = location === "All locations" || job.location === location;
             return matchesSearch && matchesDept && matchesLoc;
         });
-    }, [search, department, location]);
+    }, [jobs, search, department, location]);
 
     const hasActiveFilters = search.trim() !== "" || department !== "All departments" || location !== "All locations";
 
@@ -663,7 +614,7 @@ export default function CareersPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-fuchsia-50/40 via-white to-white pt-28 pb-24 sm:pt-32">
+        <main className="min-h-screen bg-linear-to-b from-fuchsia-50/40 via-white to-white pt-28 pb-24 sm:pt-32">
             <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10 lg:px-16">
                 {/* Header */}
                 <motion.div
@@ -671,7 +622,7 @@ export default function CareersPage() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                 >
-                    <span className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text text-xs font-semibold uppercase tracking-widest text-transparent">
+                    <span className="bg-linear-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text text-xs font-semibold uppercase tracking-widest text-transparent">
                         Careers
                     </span>
                     <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
@@ -705,7 +656,7 @@ export default function CareersPage() {
                         onChange={(e) => setDepartment(e.target.value)}
                         className="rounded-xl border border-transparent bg-fuchsia-50/60 px-3.5 py-2.5 text-sm text-slate-700 outline-none focus:border-fuchsia-300 focus:bg-white sm:w-52"
                     >
-                        {DEPARTMENTS.map((d) => (
+                        {departments.map((d) => (
                             <option key={d} value={d}>
                                 {d}
                             </option>
@@ -717,7 +668,7 @@ export default function CareersPage() {
                         onChange={(e) => setLocation(e.target.value)}
                         className="rounded-xl border border-transparent bg-fuchsia-50/60 px-3.5 py-2.5 text-sm text-slate-700 outline-none focus:border-fuchsia-300 focus:bg-white sm:w-52"
                     >
-                        {LOCATIONS.map((l) => (
+                        {locations.map((l) => (
                             <option key={l} value={l}>
                                 {l}
                             </option>
@@ -736,96 +687,121 @@ export default function CareersPage() {
                 </motion.div>
 
                 {/* Results count */}
-                <p className="mt-6 text-xs font-medium uppercase tracking-wide text-slate-400">
-                    {filtered.length} {filtered.length === 1 ? "role" : "roles"} found
-                </p>
+                {!isLoading && !isError && (
+                    <p className="mt-6 text-xs font-medium uppercase tracking-wide text-slate-400">
+                        {filtered.length} {filtered.length === 1 ? "role" : "roles"} found
+                    </p>
+                )}
 
                 {/* Job list */}
                 <div className="mt-4 flex flex-col gap-3">
-                    <AnimatePresence mode="popLayout">
-                        {filtered.length === 0 ? (
-                            <motion.div
-                                key="empty"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-14 text-center"
-                            >
-                                <p className="text-sm font-medium text-slate-700">
-                                    No roles match those filters.
-                                </p>
-                                <p className="mt-1 text-sm text-slate-500">
-                                    Try a different department or location.
-                                </p>
-                                <button
-                                    onClick={clearFilters}
-                                    className="mt-4 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-5 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                    {isLoading ? (
+                        <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-14 text-sm text-slate-500">
+                            <Loader2Icon className="size-4 animate-spin" />
+                            Loading open roles...
+                        </div>
+                    ) : isError ? (
+                        <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/40 px-6 py-14 text-center text-sm text-red-600">
+                            Couldn&apos;t load open roles right now. Please try again shortly.
+                        </div>
+                    ) : (
+                        <AnimatePresence mode="popLayout">
+                            {filtered.length === 0 ? (
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-14 text-center"
                                 >
-                                    Clear filters
-                                </button>
-                            </motion.div>
-                        ) : (
-                            filtered.map((job, i) => {
-                                const applied = appliedJobIds.has(job.id);
-                                return (
-                                    <motion.div
-                                        key={job.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                        transition={{ duration: 0.2, delay: i * 0.02 }}
-                                        className="group flex flex-col gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-5 shadow-sm backdrop-blur-xl transition-colors hover:border-fuchsia-300 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
+                                    <p className="text-sm font-medium text-slate-700">
+                                        No roles match those filters.
+                                    </p>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Try a different department or location.
+                                    </p>
+                                    <button
+                                        onClick={clearFilters}
+                                        className="mt-4 rounded-full bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 px-5 py-2 text-sm font-semibold text-white transition hover:brightness-110"
                                     >
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <h3 className="text-base font-semibold text-slate-900">
-                                                    {job.title}
-                                                </h3>
-                                                <span
-                                                    className={`rounded-full bg-gradient-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
-                                                        DEPARTMENT_COLORS[job.department] ??
-                                                        "from-slate-500 to-slate-600"
-                                                    }`}
-                                                >
-                                                    {job.department}
-                                                </span>
-                                                {applied && (
-                                                    <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                                        <CheckCircle2Icon className="size-3" />
-                                                        Applied
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <MapPinIcon className="size-3.5" />
-                                                    {job.location}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <BriefcaseIcon className="size-3.5" />
-                                                    {job.type}
-                                                </span>
-                                                <span>Posted {job.postedAt}</span>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            onClick={() => setActiveJob(job)}
-                                            disabled={applied}
-                                            className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-semibold shadow-md transition active:scale-95 sm:self-center ${
-                                                applied
-                                                    ? "cursor-default bg-emerald-50 text-emerald-700 shadow-none"
-                                                    : "bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 text-white shadow-fuchsia-500/20 hover:brightness-110"
-                                            }`}
+                                        Clear filters
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                filtered.map((job, i) => {
+                                    const applied = appliedJobIds.has(job.id);
+                                   
+                                    return (
+                                        <motion.div
+                                            key={job.id}
+                                            layout
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            transition={{ duration: 0.2, delay: i * 0.02 }}
+                                            className="group flex flex-col gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-5 shadow-sm backdrop-blur-xl transition-colors hover:border-fuchsia-300 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
                                         >
-                                            {applied ? "Application sent" : "Apply now"}
-                                        </button>
-                                    </motion.div>
-                                );
-                            })
-                        )}
-                    </AnimatePresence>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="text-base font-semibold text-slate-900">
+                                                        {job.title}
+                                                    </h3>
+                                                    <span
+                                                        className={`rounded-full bg-linear-to-r px-2.5 py-0.5 text-[11px] font-semibold text-white ${
+                                                            DEPARTMENT_COLORS[job.department ?? ""] ??
+                                                            "from-slate-500 to-slate-600"
+                                                        }`}
+                                                    >
+                                                        {job.department}
+                                                    </span>
+                                                    {applied && (
+                                                        <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                                            <CheckCircle2Icon className="size-3" />
+                                                            Applied
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {((job as any).restaurant_name || (job as any).position) && (
+                                                    <p className="flex items-center gap-1.5 text-xs text-slate-500">
+                                                        <BuildingIcon className="size-3.5" />
+                                                        {(job as any).restaurant_name}
+                                                        {(job as any).restaurant_name && (job as any).position && " · "}
+                                                        {(job as any).position}
+                                                    </p>
+                                                )}
+
+                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <MapPinIcon className="size-3.5" />
+                                                        {job.location}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <BriefcaseIcon className="size-3.5" />
+                                                        {job.employment_type}
+                                                    </span>
+                                                    <span>Posted {timeAgo(job.createdAt)}</span>
+                                                   
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => setActiveJob(job)}
+                                                disabled={applied}
+                                                className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-semibold shadow-md transition active:scale-95 sm:self-center ${
+                                                    applied
+                                                        ? "cursor-default bg-emerald-50 text-emerald-700 shadow-none"
+                                                        : "bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 text-white shadow-fuchsia-500/20 hover:brightness-110"
+                                                }`}
+                                            >
+                                                {applied ? "Application sent" : "Apply now"}
+                                            </button>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
+                        </AnimatePresence>
+                    )}
                 </div>
             </div>
 

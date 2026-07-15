@@ -11,32 +11,59 @@ import {
   UtensilsCrossed,
   
   BarChart3,
-  Settings,
+ 
   ScanLine,
   Users,
   FileBarChart,
   ChevronLeft,
   ChevronRight,
   FileChartPie,
+  GitBranchPlus,
+  ClipboardList,
+  MessageSquare,
 } from "lucide-react";
 
 
 import { BrandColor, brand } from "@/lib/colors";
 import { useSelector } from "react-redux";
+import { useGetAllRestaurantsQuery } from "@/redux/restaurants/restaurantApi";
+import { useGetContactsQuery } from "@/redux/contacts/contactsApi";
+import { useGetAllQuestionsQuery } from "@/redux/questions/questionApi";
+
 
 const mainNav: { href: string; label: string; icon: any; color: BrandColor; badge?: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "violet" },
   { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed, color: "teal" },
-  { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber", badge: "12" },
+  { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber"},
   { href: "/analytics", label: "Analytics", icon: BarChart3, color: "pink" },
 ];
 
 const workspaceNav: { href: string; label: string; icon: any; color: BrandColor }[] = [
   { href: "/CV", label: "New CV Submissions", icon: Users, color: "blue" },
   { href: "/reports", label: "Reports", icon: FileBarChart, color: "coral" },
-  { href: "/settings", label: "Settings", icon: Settings, color: "slate" },
+  { href: "/jobs", label: "Add Jobs", icon: GitBranchPlus , color: "slate" },
 ];
-
+const recruitmentNav: {
+  href: string;
+  label: string;
+  icon: any;
+  color: BrandColor;
+  badge?: string;
+}[] = [
+  {
+    href: "/question",
+    label: "Add Questions",
+    icon: ClipboardList,
+    color: "violet",
+  },
+  {
+    href: "/contacts",
+    label: "Contact Messages",
+    icon: MessageSquare,
+    color: "blue",
+    // badge: String(unreadMessages),
+  },
+];
 // Soft tint colors per brand key, used for icon chips when a row is inactive
 const iconTint: Record<BrandColor, string> = {
   violet: "text-[#6C4DF4] bg-[#6C4DF4]/10",
@@ -86,7 +113,7 @@ function NavRow({
           <motion.div
             layoutId={layoutKey}
             className={clsx(
-              "absolute inset-0 rounded-[11px] bg-gradient-to-br shadow-[0_6px_16px_-4px_rgba(108,77,244,0.35)]",
+              "absolute inset-0 rounded-[11px] bg-linear-to-br shadow-[0_6px_16px_-4px_rgba(108,77,244,0.35)]",
               brand[color].grad
             )}
             transition={{ type: "spring", stiffness: 500, damping: 40 }}
@@ -96,14 +123,14 @@ function NavRow({
           whileHover={{ x: active || collapsed ? 0 : 3 }}
           whileTap={{ scale: 0.97 }}
           className={clsx(
-            "relative z-10 flex items-center gap-3 rounded-[11px] py-2.5 text-sm font-semibold transition-colors",
+            "relative z-10 flex items-center gap-3 rounded-[11px] py-2.5 text-sm font-semibold font-['Inter'] transition-colors",
             collapsed ? "justify-center px-0" : "px-3",
             active ? "text-white" : "text-[#6B6685] hover:text-[#1A1730]"
           )}
         >
           <span
             className={clsx(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] transition-colors",
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
               active ? "bg-white/20 text-white" : iconTint[color]
             )}
           >
@@ -117,7 +144,7 @@ function NavRow({
                   animate={{ scale: [1, 1.12, 1] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                   className={clsx(
-                    "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                    "ml-auto rounded-full px-1.5 py-0.5 font-['IBM_Plex_Mono'] text-[10px] font-bold",
                     active ? "bg-white/25 text-white" : "bg-[#FF6B6B] text-white"
                   )}
                 >
@@ -142,6 +169,24 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user } = useSelector((state: any) => state.auth); 
   const [open, setOpen] = useState(true);
+  const { data: restaurantsRes } = useGetAllRestaurantsQuery();
+  const restaurantCount = restaurantsRes?.data?.length ?? 0;
+const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
+  const newContactsCount = contactsRes?.pagination?.total ?? 0;
+
+  // unanswered client questions
+  const { data: questionsRes } = useGetAllQuestionsQuery({
+    origin: "client",
+    answered: false,
+    limit: 1,
+  });
+  const pendingQuestionsCount = questionsRes?.pagination?.total ?? 0;
+   const getBadge = (href: string, fallback?: string) => {
+    if (href === "/analyticsPerRestaurant") return String(restaurantCount);
+    if (href === "/contacts") return newContactsCount > 0 ? String(newContactsCount) : undefined;
+    if (href === "/question") return pendingQuestionsCount > 0 ? String(pendingQuestionsCount) : undefined;
+    return fallback;
+  };
 
   return (
     <motion.aside
@@ -150,7 +195,8 @@ export function Sidebar() {
       transition={{ duration: 0.28, ease: "easeInOut" }}
       className="sticky top-0 z-30 flex h-screen shrink-0 flex-col gap-1.5 overflow-hidden border-r border-[#EDEBF7] bg-white py-6 text-[#1A1730]"
     >
-      {/* toggle button — sits on the edge, follows the sidebar width */}
+  
+    
       <motion.button
         onClick={() => setOpen((o) => !o)}
         initial={false}
@@ -165,34 +211,34 @@ export function Sidebar() {
       </motion.button>
 
       {/* decorative color blobs */}
-      <div className="pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-gradient-to-br from-[#6C4DF4]/20 to-[#F651A8]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 top-1/2 h-48 w-48 rounded-full bg-gradient-to-br from-[#0DA5A0]/15 to-[#3B82F6]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 -top-20 h-56 w-56 rounded-full bg-linear-to-br from-[#6C4DF4]/20 to-[#F651A8]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 top-1/2 h-48 w-48 rounded-full bg-linear-to-br from-[#0DA5A0]/15 to-[#3B82F6]/10 blur-3xl" />
 
       <div
         className={clsx(
           "relative flex-1 flex flex-col overflow-y-auto overflow-x-hidden gap-1.5",
-          open ? "px-[18px]" : "px-3"
+          open ? "px-4.5" : "px-3"
         )}
       >
         <Link
           href="/"
           className={clsx(
-            "flex items-center gap-2.5 pb-[26px] pt-1.5",
+            "flex items-center gap-2.5 pb-6.5 pt-1.5",
             open ? "px-2.5" : "justify-center px-0"
           )}
         >
           <motion.div
             whileHover={{ rotate: -8, scale: 1.05 }}
-            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#6C4DF4] to-[#F651A8] text-white"
+            className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-[10px] bg-linear-to-br from-[#6C4DF4] to-[#F651A8] text-white"
           >
             <ScanLine size={17} />
           </motion.div>
           {open && (
             <div className="overflow-hidden whitespace-nowrap">
-              <p className="text-[16.5px] font-extrabold tracking-tight leading-tight text-[#1A1730]">
+              <p className="font-['Fraunces'] text-[17px] italic tracking-tight leading-tight text-[#1A1730]">
                 HR Dashboard
               </p>
-              <p className="text-[10.5px] font-semibold uppercase tracking-widest leading-tight text-[#9C97B5]">
+              <p className="font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest leading-tight text-[#9C97B5]">
                 Client Evaluation
               </p>
             </div>
@@ -200,24 +246,25 @@ export function Sidebar() {
         </Link>
 
         {open && (
-          <p className="mb-2 mt-1 px-2.5 text-[10.5px] font-semibold uppercase tracking-widest text-[#B4AFC9]">
+          <p className="mb-2 mt-1 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
             Overview
           </p>
         )}
-        <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-1.5">
-          {mainNav.map((item) => (
-            <NavRow
-              key={item.href}
-              {...item}
-              active={pathname === item.href}
-              layoutKey="active-main"
-              collapsed={!open}
-            />
-          ))}
-        </motion.div>
+       <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-1.5">
+  {mainNav.map((item) => (
+    <NavRow
+      key={item.href}
+      {...item}
+      badge={getBadge(item.href, item.badge)}
+      active={pathname === item.href}
+      layoutKey="active-main"
+      collapsed={!open}
+    />
+  ))}
+</motion.div>
 
         {open && (
-          <p className="mb-2 mt-4 px-2.5 text-[10.5px] font-semibold uppercase tracking-widest text-[#B4AFC9]">
+          <p className="mb-2 mt-4 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
             Workspace
           </p>
         )}
@@ -236,10 +283,34 @@ export function Sidebar() {
               collapsed={!open}
             />
           ))}
+          
         </motion.div>
+        {open && (
+  <p className="mb-2 mt-4 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
+    Recruitment
+  </p>
+)}
+
+<motion.div
+  variants={listVariants}
+  initial="hidden"
+  animate="show"
+  className={clsx("flex flex-col gap-1.5", !open && "mt-4")}
+>
+{recruitmentNav.map((item) => (
+    <NavRow
+      key={item.href}
+      {...item}
+      badge={getBadge(item.href, item.badge)}
+      active={pathname === item.href}
+      layoutKey="active-recruitment"
+      collapsed={!open}
+    />
+  ))}
+</motion.div>
       </div>
 
-      <motion.div whileHover={{ y: -2 }} className={clsx("relative", open ? "px-[18px]" : "px-3")}>
+      <motion.div whileHover={{ y: -2 }} className={clsx("relative", open ? "px-4.5" : "px-3")}>
         <Link
           href="/Profile"
           className={clsx(
@@ -250,7 +321,7 @@ export function Sidebar() {
         >
           <div
             className={clsx(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[13px] font-bold text-white",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br font-['IBM_Plex_Mono'] text-[13px] font-bold text-white",
               brand.teal.grad
             )}
           >
@@ -263,8 +334,8 @@ export function Sidebar() {
           </div>
           {open && (
             <div className="min-w-0 overflow-hidden whitespace-nowrap">
-              <p className="truncate text-[13px] font-bold text-[#1A1730]">{user?.name ?? "Guest"}</p>
-              <p className="truncate text-[11px] text-[#9C97B5]">{user?.role ?? "Not signed in"}</p>
+              <p className="truncate font-['Fraunces'] text-[13.5px] italic text-[#1A1730]">{user?.name ?? "Guest"}</p>
+              <p className="truncate font-['Inter'] text-[11px] text-[#9C97B5]">{user?.role ?? "Not signed in"}</p>
             </div>
           )}
         </Link>

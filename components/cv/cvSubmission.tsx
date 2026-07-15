@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useMemo, useState } from "react";
@@ -28,6 +29,16 @@ const STAGE_COLOR: Record<string, string> = {
     "Rejected": "bg-red-100 text-red-700",
     "Hired": "bg-emerald-100 text-emerald-700",
 };
+
+/* Same type system as the Service Ledger / Analytics pages:
+   Fraunces italic for identity/headings, Inter for body, IBM Plex Mono for numbers. */
+function LedgerFonts() {
+    return (
+        <style jsx global>{`
+            @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+        `}</style>
+    );
+}
 
 export default function AdminCvDashboard() {
     const [search, setSearch] = useState("");
@@ -70,12 +81,13 @@ export default function AdminCvDashboard() {
     }, [applicants]);
 
     return (
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-6xl font-['Inter']">
+            <LedgerFonts />
             <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-                <span className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text font-mono text-xs font-semibold uppercase tracking-widest text-transparent">
+                <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-fuchsia-600">
                     [ Recruitment ]
                 </span>
-                <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Submissions</h1>
+                <h1 className="mt-2 font-['Fraunces'] text-3xl italic text-slate-900 sm:text-4xl">Submissions</h1>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
                     Every CV that&apos;s come in, filterable by role, stage, and search.
                 </p>
@@ -91,7 +103,7 @@ export default function AdminCvDashboard() {
 
             {/* Filters */}
             <div className="mt-8 flex flex-wrap items-center gap-3">
-                <div className="relative max-w-sm flex-1 min-w-[220px]">
+                <div className="relative max-w-sm flex-1 min-w-55">
                     <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <input
                         value={search}
@@ -158,7 +170,7 @@ export default function AdminCvDashboard() {
 
                     {totalPages > 1 && (
                         <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-fuchsia-100 bg-white/70 px-4 py-2.5 text-xs text-slate-500">
-                            <span>
+                            <span className="font-['IBM_Plex_Mono']">
                                 Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
                             </span>
                             <div className="flex items-center gap-2">
@@ -166,7 +178,7 @@ export default function AdminCvDashboard() {
                                     className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40">
                                     <ChevronLeftIcon className="size-3.5" />
                                 </button>
-                                <span className="font-medium text-slate-700">{safePage} / {totalPages}</span>
+                                <span className="font-['IBM_Plex_Mono'] font-medium text-slate-700">{safePage} / {totalPages}</span>
                                 <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
                                     className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40">
                                     <ChevronRightIcon className="size-3.5" />
@@ -187,11 +199,11 @@ export default function AdminCvDashboard() {
 function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-fuchsia-100 bg-white/70 p-4 shadow-sm backdrop-blur-xl">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 via-fuchsia-600 to-purple-600">
                 <Icon className="size-5 text-white" />
             </div>
             <div>
-                <p className="text-xl font-semibold text-slate-900">{value}</p>
+                <p className="font-['Fraunces'] text-xl italic text-slate-900">{value}</p>
                 <p className="text-xs text-slate-500">{label}</p>
             </div>
         </div>
@@ -204,7 +216,7 @@ function ApplicantRow({ applicant, onOpen }: { applicant: Applicant; onOpen: () 
     return (
         <tr className="border-b border-fuchsia-50 last:border-0 hover:bg-fuchsia-50/40">
             <td className="px-4 py-3">
-                <button type="button" onClick={onOpen} className="text-left font-medium text-slate-900 hover:text-fuchsia-600 hover:underline">
+                <button type="button" onClick={onOpen} className="text-left font-['Fraunces'] italic text-slate-900 hover:text-fuchsia-600 hover:underline">
                     {applicant.name}
                 </button>
                 <div className="text-xs text-slate-400">{applicant.email}</div>
@@ -220,7 +232,7 @@ function ApplicantRow({ applicant, onOpen }: { applicant: Applicant; onOpen: () 
                     {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
             </td>
-            <td className="px-4 py-3 text-slate-500">{new Date(applicant.submittedAt).toLocaleDateString()}</td>
+            <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">{new Date(applicant.submittedAt).toLocaleDateString()}</td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2 text-slate-400">
                     <a href={`mailto:${applicant.email}`} className="hover:text-fuchsia-600"><MailIcon className="size-4" /></a>
@@ -314,11 +326,11 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
             <motion.div
                 initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 260 }}
-                className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl"
+                className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl font-['Inter']"
             >
                 <div className="flex items-start justify-between">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-900">{applicant.name}</h2>
+                        <h2 className="font-['Fraunces'] text-lg italic text-slate-900">{applicant.name}</h2>
                         <p className="text-sm text-slate-500">{applicant.job || "General submission"}</p>
                     </div>
                     <button type="button" onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100">
@@ -345,7 +357,7 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                     )}
                     {applicant.message && (
                         <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Cover message</p>
+                            <p className="font-['IBM_Plex_Mono'] text-xs font-medium uppercase tracking-wide text-slate-400">Cover message</p>
                             <p className="mt-1 text-slate-700">{applicant.message}</p>
                         </div>
                     )}
@@ -356,7 +368,7 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                 </div>
 
                <div className="mt-6 border-t border-slate-100 pt-5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <label className="font-['IBM_Plex_Mono'] text-xs font-medium uppercase tracking-wide text-slate-400">
                         Assign to (email)
                     </label>
                     <div className="mt-1.5 flex items-center gap-2">
@@ -380,12 +392,12 @@ function ApplicantDrawer({ applicant, onClose }: { applicant: Applicant; onClose
                 </div>
 
                 <div className="mt-6 border-t border-slate-100 pt-5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-slate-400">Notes</label>
+                    <label className="font-['IBM_Plex_Mono'] text-xs font-medium uppercase tracking-wide text-slate-400">Notes</label>
                     <div className="mt-2 flex flex-col gap-2">
                       {(applicant.notes || []).map((n) => (
     <div key={n.id} className="rounded-lg bg-slate-50 p-2.5 text-xs">
         <p className="text-slate-700">{n.text}</p>
-        <p className="mt-1 text-slate-400">{n.author} · {new Date(n.createdAt).toLocaleDateString()}</p>
+        <p className="mt-1 font-['IBM_Plex_Mono'] text-slate-400">{n.author} · {new Date(n.createdAt).toLocaleDateString()}</p>
     </div>
 ))}
                     </div>

@@ -58,7 +58,7 @@ export function CommandPalette() {
       type: "restaurant" as const,
       href: `/restaurants/${r.id}`,
       label: r.name,
-      sub: `${r.tables} tables`,
+     
     })),
   ];
 
@@ -114,25 +114,24 @@ export function CommandPalette() {
           )}
 
           {results.map((r, i) => (
-            <button
-              key={`${r.type}-${r.href}-${r.label}`}
-              onClick={() => go(r.href)}
-              onMouseEnter={() => setActiveIndex(i)}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm ${
-                i === activeIndex ? "bg-[#F5F3FF] text-[#1A1730]" : "text-[#6B6685]"
-              }`}
-            >
-              {"icon" in r && r.icon ? (
-                <r.icon size={15} className="shrink-0 text-[#9C97B5]" />
-              ) : (
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#6C4DF4] to-[#8C6BFF] text-[9px] font-bold text-white">
-                  {r.label.charAt(0)}
-                </span>
-              )}
-              <span className="flex-1 truncate font-medium">{r.label}</span>
-              {"sub" in r && r.sub && <span className="text-xs text-[#B4AFC9]">{r.sub}</span>}
-            </button>
-          ))}
+  <button
+    key={`${r.type}-${r.href}-${r.label}`}
+    onClick={() => go(r.href)}
+    onMouseEnter={() => setActiveIndex(i)}
+    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm ${
+      i === activeIndex ? "bg-[#F5F3FF] text-[#1A1730]" : "text-[#6B6685]"
+    }`}
+  >
+    {"icon" in r && r.icon ? (
+      <r.icon size={15} className="shrink-0 text-[#9C97B5]" />
+    ) : (
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#6C4DF4] to-[#8C6BFF] text-[9px] font-bold text-white">
+        {r.label.charAt(0)}
+      </span>
+    )}
+    <span className="truncate">{r.label}</span>
+  </button>
+))}
         </div>
       </div>
     </div>

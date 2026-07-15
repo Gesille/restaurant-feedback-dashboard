@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { useSearch } from "@/lib/search-context";
+import { useModal } from "@/lib/modal-context";
+
 
 function getInitials(name?: string) {
   if (!name) return "??";
@@ -17,7 +19,7 @@ function getInitials(name?: string) {
 // Maps a route segment to a human title when a page doesn't pass one explicitly.
 const ROUTE_TITLES: Record<string, string> = {
   dashboard: "Dashboard",
-  "qr-generator": "QR Generator",
+  analyticsPerRestaurant: "A nalytics Per Restaurant",
   profile: "Profile",
   login: "Log in",
 };
@@ -33,13 +35,14 @@ export function Topbar({ title, subtitle }: { title?: string; subtitle?: string 
   const { user } = useSelector((state: any) => state.auth);
   const { query, setQuery, openPalette } = useSearch();
   const pathname = usePathname();
-
+const { openNewRestaurant } = useModal();
   const resolvedTitle = title ?? titleFromPathname(pathname);
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-[#EDEBF7] bg-white/80 px-8 py-5 backdrop-blur">
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-[#EDEBF7] bg-white/80 px-8 py-5 backdrop-blur font-['Inter']">
+   
       <div>
-        <h1 className="text-xl font-bold text-[#1A1730]">{resolvedTitle}</h1>
+        <h1 className="font-['Fraunces'] text-xl italic text-[#1A1730]">{resolvedTitle}</h1>
         {subtitle && <p className="mt-0.5 text-sm text-[#9C97B5]">{subtitle}</p>}
       </div>
 
@@ -53,27 +56,23 @@ export function Topbar({ title, subtitle }: { title?: string; subtitle?: string 
             placeholder="Search restaurants, tables…"
             className="w-40 bg-transparent outline-none placeholder:text-[#9C97B5] lg:w-56"
           />
-          <kbd className="hidden rounded-md border border-[#EDEBF7] px-1.5 py-0.5 text-[10px] font-semibold text-[#B4AFC9] lg:block">
+          <kbd className="hidden rounded-md border border-[#EDEBF7] px-1.5 py-0.5 font-['IBM_Plex_Mono'] text-[10px] font-medium text-[#B4AFC9] lg:block">
             ⌘K
           </kbd>
         </div>
 
-        <Link
-          href="/qr-generator"
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-[#6C4DF4] to-[#8C6BFF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:opacity-95"
+     <button
+          onClick={openNewRestaurant}
+           className="flex items-center gap-2 rounded-xl bg-linear-to-br from-[#6C4DF4] to-[#8C6BFF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:opacity-95"
         >
-          <Plus size={16} />
+          <Plus size={16} className="text-[#8FE3B8]" />
           New restaurant
-        </Link>
-
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#EDEBF7] text-[#6B6685] hover:bg-[#FBFAFF]">
-          <Bell size={17} />
-          <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-[#FF6B6B]" />
         </button>
 
+        
         {user ? (
           <Link href="/Profile" aria-label="View profile">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#6C4DF4] to-[#8C6BFF] text-xs font-semibold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-[#6C4DF4] to-[#8C6BFF] font-['IBM_Plex_Mono'] text-xs font-semibold text-white">
               {getInitials(user?.name)}
             </div>
           </Link>

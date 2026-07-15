@@ -7,7 +7,7 @@ export const restaurantsData: IRestaurant[] = [
   {
     id: 1,
     name: "Maia South Point Restaurant & Lounge",
-    tables: 25,
+   
     menuViews: 1200,
     scansToday: 150,
     location: "English Harbour | Antigua",
@@ -24,7 +24,7 @@ export const restaurantsData: IRestaurant[] = [
   {
     id: 2,
     name: "South Point Real Estate",
-    tables: 15,
+  
     menuViews: 800,
     scansToday: 100,
     location: "English Harbour | Antigua",
@@ -41,7 +41,7 @@ export const restaurantsData: IRestaurant[] = [
   {
     id: 3,
     name: "charr'd",
-    tables: 20,
+  
     menuViews: 1000,
     scansToday: 120,
     location: "Town Park Plaza, Epicurean Drive",
@@ -63,7 +63,7 @@ export const restaurantsData: IRestaurant[] = [
     rating: 4.1,
     reviews: 720,
     website: "https://bigbanana-antigua.com/",
-    tables: 0,
+    
     menuViews: 0,
     scansToday: 0,
     status: "paused",
@@ -80,7 +80,7 @@ export const restaurantsData: IRestaurant[] = [
     rating: 4.4,
     reviews: 1100,
     website: "https://bigbanana-antigua.com/",
-    tables: 0,
+    
     menuViews: 0,
     scansToday: 0,
     status: "paused",
@@ -92,7 +92,7 @@ export const restaurantsData: IRestaurant[] = [
   {
     id: 6,
     name: "Chef's World",
-    tables: 0,
+    
     menuViews: 0,
     scansToday: 0,
     location: "Gambles Centre, Friars Hill Rd, St John's, Antigua",
@@ -109,7 +109,7 @@ export const restaurantsData: IRestaurant[] = [
   {
     id: 7,
     name: "Next International Ltd.",
-    tables: 0,
+   
     menuViews: 0,
     scansToday: 0,
     location: "Gambles Centre, Friars Hill Rd, St John's, Antigua",

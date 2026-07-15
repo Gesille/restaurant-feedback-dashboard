@@ -130,11 +130,11 @@ export default function ProfilePage() {
       {/* ambient background accents so the page doesn't read as empty on wide screens */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 size-[420px] rounded-full bg-gradient-to-br from-pink-300/30 via-fuchsia-300/20 to-transparent blur-3xl"
+        className="pointer-events-none absolute -top-24 -left-24 size-105 rounded-full bg-linear-to-br from-pink-300/30 via-fuchsia-300/20 to-transparent blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute top-40 -right-32 size-[480px] rounded-full bg-gradient-to-br from-purple-300/25 via-fuchsia-200/15 to-transparent blur-3xl"
+        className="pointer-events-none absolute top-40 -right-32 size-120 rounded-full bg-linear-to-br from-purple-300/25 via-fuchsia-200/15 to-transparent blur-3xl"
       />
 
       <div className="relative mx-auto max-w-5xl">
@@ -145,7 +145,7 @@ export default function ProfilePage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="mb-8 flex items-center gap-3"
         >
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600 shadow-lg shadow-fuchsia-500/30">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-pink-500 via-fuchsia-600 to-purple-600 shadow-lg shadow-fuchsia-500/30">
             <Sparkles size={20} className="text-white" />
           </div>
           <div>
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                       className="size-full rounded-full object-cover"
                     />
                   ) : (
-                    <div className="size-full rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="size-full rounded-full bg-linear-to-br from-pink-500 via-fuchsia-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
                       {getInitials(user?.name)}
                     </div>
                   )}
@@ -289,7 +289,7 @@ export default function ProfilePage() {
                   {tab === id && (
                     <motion.div
                       layoutId="profile-tab-underline"
-                      className="absolute left-2 right-2 -bottom-px h-[2px] bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-full"
+                      className="absolute left-2 right-2 -bottom-px h-0.5 bg-linear-to-r from-pink-500 to-fuchsia-600 rounded-full"
                       transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
                   )}
@@ -509,7 +509,7 @@ function Switch({
       disabled={disabled}
       onClick={onChange}
       className={`relative h-6 w-11 rounded-full shrink-0 transition-colors ${
-        checked ? "bg-gradient-to-r from-pink-500 to-fuchsia-600" : "bg-gray-200"
+        checked ? "bg-linear-to-r from-pink-500 to-fuchsia-600" : "bg-gray-200"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <motion.span
@@ -619,7 +619,7 @@ function SaveButton({
       onClick={onClick}
       disabled={loading || disabled}
       whileTap={{ scale: 0.98 }}
-      className="h-11 px-6 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 transition-all shadow-lg shadow-fuchsia-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      className="h-11 px-6 rounded-xl text-white text-sm font-semibold bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 transition-all shadow-lg shadow-fuchsia-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
     >
       <AnimatePresence mode="wait" initial={false}>
         {loading ? (

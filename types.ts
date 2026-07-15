@@ -101,7 +101,7 @@ export interface IRestaurant {
   qrValue?: string;
   status: "active" | "paused";
   color: BrandColor;
-  tables: number;
+ 
   menuViews: number;
   scansToday: number;
 x_qr_generated?: boolean;
@@ -112,3 +112,73 @@ export type ScanPoint = {
   scans: number;
 };
 
+
+export type EmploymentType = 'Full-time' | 'Part-time' | 'Contract' | 'Seasonal' | 'Internship';
+export type JobStatus = 'open' | 'closed' | 'draft';
+
+
+
+export interface Job {
+  id: string;
+  restaurant_id: string;
+  restaurant_name?: string;
+  position: string;
+  title: string;  
+  department?: string;
+  employment_type: EmploymentType;
+  description: string;
+  requirements: string[];
+  responsibilities: string[];
+  keywords: string[];
+  contact_email: string;
+  contact_phone: string;
+  location?: string;
+ 
+  status: JobStatus;
+  closing_date?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJobRequest {
+  restaurant_id: string;
+  position: string;
+  title: string;  
+  department?: string;
+  employment_type?: EmploymentType;
+  description: string;
+  requirements?: string[];
+  responsibilities?: string[];
+  keywords?: string[];
+  contact_email: string;
+  contact_phone: string;
+  location?: string;
+  
+  status?: JobStatus;
+  closing_date?: string;
+}
+
+
+export type UpdateJobRequest = Partial<CreateJobRequest> & { id: string };
+
+
+export interface JobFilters {
+  restaurant_id?: string;
+  status?: JobStatus;
+  department?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface JobListResult {
+  jobs: Job[];
+  total: number;
+}
+
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}

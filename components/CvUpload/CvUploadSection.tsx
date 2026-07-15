@@ -186,7 +186,7 @@ export default function CvUploadSection() {
                         {PROCESS.map((step, i) => (
                             <div key={step.n} className="relative pl-10 pb-10 last:pb-0">
                                 {i !== PROCESS.length - 1 && (
-                                    <span className="absolute left-[13px] top-7 bottom-0 w-px bg-[#C9BFA8]" />
+                                    <span className="absolute left-3.25 top-7 bottom-0 w-px bg-[#C9BFA8]" />
                                 )}
                                 <span className="absolute left-0 top-0 flex items-center justify-center size-7 rounded-full bg-[#1B1B18] text-[#EDE6D6] font-mono text-[11px]">
                                     {step.n}

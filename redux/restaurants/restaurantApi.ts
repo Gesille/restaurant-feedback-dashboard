@@ -71,16 +71,15 @@ export const restaurantApi = apiSlice.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Restaurant", id }],
     }),
 
-    createRestaurant: builder.mutation<CreateRestaurantResponse, CreateRestaurantData>({
-      query: (data) => ({
-        url: "restaurants",
-        method: "POST",
-        body: data,
-        credentials: "include" as const,
-      }),
-      invalidatesTags: ["Restaurant"],
-    }),
-
+    createRestaurant: builder.mutation<CreateRestaurantResponse, FormData>({
+  query: (formData) => ({
+    url: "restaurants",
+    method: "POST",
+    body: formData,
+    credentials: "include" as const,
+  }),
+  invalidatesTags: ["Restaurant"],
+}),
     getRestaurantsWithoutQr: builder.query<GetAllRestaurantsResponse, void>({
       query: () => ({
         url: "restaurants/without-qr",

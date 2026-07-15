@@ -151,7 +151,7 @@ const Login: FC<Props> = ({ setRoute, setOpen, refetch }) => {
 
         <button
           type="submit"
-          className="w-full h-11 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-fuchsia-500/30"
+          className="w-full h-11 rounded-xl text-white text-sm font-semibold bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-fuchsia-500/30"
           disabled={isLoading}
         >
           {isLoading ? "Logging in..." : "Login"}

@@ -2,72 +2,30 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { ArrowUpRight, Plus } from "lucide-react";
+import { useGetPublishedQuestionsQuery, useSubmitQuestionMutation } from "@/redux/questions/questionApi";
 
-type Question = {
-    id: string;
-    text: string;
-    reply: string;
-    askedAt: string;
-};
-
-const INITIAL_QUESTIONS: Question[] = [
-    {
-        id: "demo-1",
-        text: "Do you sponsor visas for remote hires outside the AST timezone?",
-        reply:
-            "Yes, on a case-by-case basis depending on the role. Mention it in your application and HR will confirm during screening.",
-        askedAt: "Jul 4, 2026",
-    },
-    {
-        id: "demo-2",
-        text: "What's the typical turnaround time between interview stages?",
-        reply:
-            "Usually 3-5 business days between each stage. If it's taking longer, feel free to follow up with your recruiter directly.",
-        askedAt: "Jul 2, 2026",
-    },
-    {
-        id: "demo-3",
-        text: "Is relocation assistance available for international candidates?",
-        reply:
-            "For select senior roles, yes. The offer letter will state whether relocation support applies, and HR can walk you through the details before you accept.",
-        askedAt: "Jun 28, 2026",
-    },
-    {
-        id: "demo-4",
-        text: "Can I apply to more than one open role at the same time?",
-        reply:
-            "Yes. Apply to any roles you're a genuine fit for. If two teams both want to move forward, your recruiter will help you coordinate the process.",
-        askedAt: "Jun 24, 2026",
-    },
-    {
-        id: "demo-5",
-        text: "Do you offer part-time or four-day-week arrangements?",
-        reply:
-            "It depends on the team and role. A few teams already support four-day weeks; mention your preference during screening and we'll flag it to the hiring manager.",
-        askedAt: "Jun 20, 2026",
-    },
-];
 
 export default function QuestionsSection() {
-    // Only questions HR has approved and answered are shown publicly.
-    const [questions] = useState<Question[]>(INITIAL_QUESTIONS);
+    const { data, isLoading } = useGetPublishedQuestionsQuery();
+    const [submitQuestion, { isLoading: submitting, isSuccess, reset }] =
+        useSubmitQuestionMutation();
+
     const [draft, setDraft] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-    const [justSubmitted, setJustSubmitted] = useState(false);
     const [openId, setOpenId] = useState<string | null>(null);
 
-    const handleAsk = (e: React.FormEvent<HTMLFormElement>) => {
+    const questions = data?.data ?? [];
+
+    const handleAsk = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!draft.trim()) return;
 
-        setSubmitting(true);
-        // TODO: replace with a real API call, e.g. POST /api/questions
-        setTimeout(() => {
+        try {
+            await submitQuestion({ question: draft.trim() }).unwrap();
             setDraft("");
-            setSubmitting(false);
-            setJustSubmitted(true);
-            setTimeout(() => setJustSubmitted(false), 4000);
-        }, 500);
+            setTimeout(() => reset(), 4000);
+        } catch {
+            // isSuccess simply won't flip; the button re-enables so they can retry.
+        }
     };
 
     return (
@@ -122,63 +80,74 @@ export default function QuestionsSection() {
 
                             <motion.p
                                 initial={false}
-                                animate={{ opacity: justSubmitted ? 1 : 0 }}
+                                animate={{ opacity: isSuccess ? 1 : 0 }}
                                 transition={{ duration: 0.3 }}
                                 className="text-xs text-slate-500"
                             >
-                                {justSubmitted && "Sent. It'll appear here once HR reviews and answers it."}
+                                {isSuccess && "Sent. It'll appear here once HR reviews and answers it."}
                             </motion.p>
                         </form>
                     </div>
 
                     {/* Right: public Q&A list */}
                     <div>
-                        {questions.length === 0 ? (
+                        {isLoading ? (
+                            <p className="py-8 text-sm text-slate-500">Loading questions…</p>
+                        ) : questions.length === 0 ? (
                             <p className="py-8 text-sm text-slate-500">
                                 No questions answered yet. Be the first to ask one.
                             </p>
                         ) : (
                             questions.map((q) => {
-                            const isOpen = openId === q.id;
-                            return (
-                                <div
-                                    key={q.id}
-                                    className="border-t border-slate-200 py-6 first:pt-0 last:pb-0"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => setOpenId(isOpen ? null : q.id)}
-                                        aria-expanded={isOpen}
-                                        className="-mx-3 flex w-[calc(100%+1.5rem)] items-center justify-between gap-4 rounded-xl px-3 py-1 text-left transition-colors hover:bg-slate-50"
+                                const isOpen = openId === q._id;
+                                return (
+                                    <div
+                                        key={q._id}
+                                        className="border-t border-slate-200 py-6 first:pt-0 last:pb-0"
                                     >
-                                        <span className="text-base font-medium text-slate-900 md:text-lg">
-                                            {q.text}
-                                        </span>
-                                        <Plus
-                                            className={`size-5 shrink-0 text-slate-500 transition-transform duration-200 ${
-                                                isOpen ? "rotate-45" : ""
-                                            }`}
-                                        />
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenId(isOpen ? null : q._id)}
+                                            aria-expanded={isOpen}
+                                            className="-mx-3 flex w-[calc(100%+1.5rem)] items-center justify-between gap-4 rounded-xl px-3 py-1 text-left transition-colors hover:bg-slate-50"
+                                        >
+                                            <span className="text-base font-medium text-slate-900 md:text-lg">
+                                                {q.question}
+                                            </span>
+                                            <Plus
+                                                className={`size-5 shrink-0 text-slate-500 transition-transform duration-200 ${
+                                                    isOpen ? "rotate-45" : ""
+                                                }`}
+                                            />
+                                        </button>
 
-                                    <motion.div
-                                        initial={false}
-                                        animate={{
-                                            height: isOpen ? "auto" : 0,
-                                            opacity: isOpen ? 1 : 0,
-                                        }}
-                                        transition={{ duration: 0.25, ease: "easeOut" }}
-                                        className="overflow-hidden"
-                                    >
-                                        <p className="mt-3 text-sm leading-relaxed text-slate-600 md:text-[15px]">
-                                            {q.reply}
-                                        </p>
-                                        <p className="mt-4 text-xs text-slate-400">
-                                            Answered {q.askedAt}
-                                        </p>
-                                    </motion.div>
-                                </div>
-                            );
+                                        <motion.div
+                                            initial={false}
+                                            animate={{
+                                                height: isOpen ? "auto" : 0,
+                                                opacity: isOpen ? 1 : 0,
+                                            }}
+                                            transition={{ duration: 0.25, ease: "easeOut" }}
+                                            className="overflow-hidden"
+                                        >
+                                            <p className="mt-3 text-sm leading-relaxed text-slate-600 md:text-[15px]">
+                                                {q.answer}
+                                            </p>
+                                            <p className="mt-4 text-xs text-slate-400">
+                                                {(() => {
+                                                    const d = new Date(q.updatedAt);
+                                                    return Number.isNaN(d.getTime())
+                                                        ? null
+                                                        : `Answered ${d.toLocaleDateString("en-US", {
+                                                              month: "short",
+                                                              day: "numeric",
+                                                              year: "numeric",
+                                                          })}`;
+                                                })()}
+                                            </p>
+                                        </motion.div>
+                                    </div>
+                                );
                             })
                         )}
                     </div>

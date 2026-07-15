@@ -3,7 +3,7 @@ import QRGeneratorPanel from "@/components/dashboard/restaurants/QRGeneratorPane
 import { Topbar } from "@/components/layout/Topbar";
 
 export default async function QrGeneratorPage({
-  searchParams,
+
 }: {
   searchParams: Promise<{ restaurant?: string }>;
 }) {
@@ -11,8 +11,12 @@ export default async function QrGeneratorPage({
 
   return (
     <>
-      <Topbar title="QR Generator" subtitle="Create a branded, trackable QR code in seconds" />
+
       <div className="px-8 py-6">
+             <Topbar 
+  title="Restaurant Analytics"
+  subtitle="Performance insights and customer feedback for this restaurant"
+/>
         <QRGeneratorPanel />
       </div>
     </>

@@ -32,7 +32,7 @@ export function StatCard({
   const ringOffset = 100 - deltaMagnitude;
 
   return (
-    <Card className="relative overflow-hidden p-5">
+    <Card className="relative overflow-hidden p-5 font-mono-custom">
       {data && data.length > 1 && <Sparkline data={data} theme={theme} />}
 
       <div className="relative flex items-start justify-between">

@@ -2,7 +2,12 @@ import { apiSlice } from "../api/apiSlice";
 
 export type CvFile = { id: string; name: string; mimetype: string; downloadUrl: string };
 export type ApplicantNote = { id: string; text: string; author: string; createdAt: string };
-
+export interface StageHistory {
+    id: string;
+    stage: string;
+    changedBy: string;
+    changedAt: string;
+}
 export type Applicant = {
   id: string;
   name: string;
@@ -16,6 +21,7 @@ export type Applicant = {
   job: string | null;
   submittedAt: string;
   cvFiles: CvFile[];
+   stageHistory: StageHistory[];
 };
 
 type SubmitCVData = {
@@ -33,6 +39,21 @@ type GetAllCVsResponse = {
   message?: string;
   data: Applicant[];
 };
+export type TrackedApplication = {
+  id: string;
+  job: string | null;
+  stage: string;
+  submittedAt: string;
+  stageHistory: { stage: string; changedAt: string }[];
+  cvFiles: { id: string; name: string; downloadUrl: string }[];
+};
+
+type TrackApplicationResponse = {
+  success: boolean;
+  message?: string;
+  data: TrackedApplication[];
+};
+
 
 export const careersApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -108,6 +129,17 @@ addApplicantNote: builder.mutation<{ success: boolean; notes: ApplicantNote[] },
   }),
   invalidatesTags: ["CV"],
 }),
+trackApplication: builder.mutation<
+  TrackApplicationResponse,
+  { email: string; phone: string }
+>({
+  query: (body) => ({
+    url: "track",
+    method: "POST",
+    body,
+    credentials: "include" as const,
+  }),
+}),
   }),
 });
 
@@ -118,4 +150,5 @@ export const {
   useUpdateApplicantStageMutation,
   useAssignApplicantMutation,
   useAddApplicantNoteMutation,
+  useTrackApplicationMutation 
 } = careersApi;

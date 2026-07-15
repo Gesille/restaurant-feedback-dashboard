@@ -83,7 +83,7 @@ const Verification: FC<Props> = ({ setRoute }) => {
       </p>
 
       <div className="w-full flex items-center justify-center mt-6">
-        <div className="size-16 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/30">
+        <div className="size-16 rounded-full bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/30">
           <VscWorkspaceTrusted size={30} className="text-white" />
         </div>
       </div>
@@ -109,7 +109,7 @@ const Verification: FC<Props> = ({ setRoute }) => {
 
      <button
   disabled={isLoading}
-  className="w-full h-11 mt-8 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-fuchsia-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+  className="w-full h-11 mt-8 rounded-xl text-white text-sm font-semibold bg-linear-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-fuchsia-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
   onClick={verificationHandler}
 >
   {isLoading ? "Verifying..." : "Verify OTP"}
