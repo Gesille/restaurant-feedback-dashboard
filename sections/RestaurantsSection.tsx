@@ -76,9 +76,10 @@ export default function RestaurantsSection() {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+// comment
 
   const stats = [
-    { label: "Restaurants", value: "12+" },
+    { label: "Restaurants", value: "5+" },
     { label: "Cities", value: "6" },
     { label: "Avg. rating", value: "4.8" },
     { label: "Reviews collected", value: "18k+" },
