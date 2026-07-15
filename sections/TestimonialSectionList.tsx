@@ -160,7 +160,7 @@ export default function TestimonialSectionList() {
         <div id="testimonials">
             <div className="px-4 md:px-16 lg:px-24 xl:px-32">
                <SectionTitle
-            text1="Testimonials"
+            text1="Track Application"
             text2="Don't just take our word for it"
             text3="Hear what our users say about us. We're always looking for ways to improve. If you have a positive experience with us, leave a review."
         />
