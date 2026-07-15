@@ -189,10 +189,10 @@ export default function RestaurantsSection() {
         <div className="flex items-end justify-between mb-6">
           <div>
             <h3 className="text-lg sm:text-xl font-semibold text-slate-800">
-              Featured locations
+              Trusted by Businesses
             </h3>
             <p className="text-sm text-slate-400 mt-1">
-              Swipe or use the arrows to explore
+             We&apos;re proud to have delivered our services to these companies.
             </p>
           </div>
           <div className="flex items-center gap-2">
