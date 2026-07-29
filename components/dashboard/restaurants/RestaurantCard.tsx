@@ -42,14 +42,11 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
 
   return (
     <>
-      {/* Same type system as the Service Ledger analytics page:
-          Fraunces italic for identity, Inter for body, IBM Plex Mono for numbers. */}
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
       `}</style>
 
       <Card className="overflow-hidden border border-slate-200 bg-white p-0 font-['Inter'] transition-shadow duration-200 hover:shadow-md">
-        {/* header row */}
         <div className="flex items-center justify-between px-5 pt-5">
           <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             <span
@@ -59,11 +56,10 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
             {isLive ? "Live" : "Paused"}
           </span>
           <span className="flex items-center gap-1 font-['IBM_Plex_Mono'] text-xs font-semibold text-slate-600">
-            <span className="text-amber-500">★</span> {r.avgRating}
+            <span className="text-amber-500">★</span> {r.avgRating ?? 0}
           </span>
         </div>
 
-        {/* identity */}
         <div className="flex items-center gap-3 px-5 pb-4 pt-3">
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-['Fraunces'] text-lg italic text-white"
@@ -75,16 +71,14 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
             <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900">
               {r.name}
             </h3>
-           
           </div>
         </div>
 
-        {/* big stat */}
         <div className="px-5 pb-4">
           <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
             <div className="flex items-baseline gap-2">
               <span className="font-['Fraunces'] text-2xl italic tracking-tight text-slate-900">
-                {r.totalScans}
+                {r.totalScans ?? 0}
               </span>
 
               {hasTrend && (
@@ -93,7 +87,7 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
                   style={{ color: trendUp ? "#16a34a" : "#dc2626" }}
                 >
                   {trendUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-                  {Math.abs(trend)}%
+                  {Math.abs(trend as number)}%
                 </span>
               )}
             </div>
@@ -103,7 +97,6 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
           </div>
         </div>
 
-        {/* actions */}
         <div className="px-5 pb-5">
           {hasQr ? (
             <button
@@ -131,7 +124,6 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
         </div>
       </Card>
 
-      {/* QR modal */}
       {qrModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4"

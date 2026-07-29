@@ -7,6 +7,10 @@ export type Restaurant = {
   x_manager_email: string;
   x_qr_token: string;
   x_qr_generated: boolean;
+  x_status?: "active" | "paused";
+  totalScans?: number;
+  avgRating?: number;
+  scansTrend?: number;
 };
 
 type CreateRestaurantData = {
@@ -72,14 +76,15 @@ export const restaurantApi = apiSlice.injectEndpoints({
     }),
 
     createRestaurant: builder.mutation<CreateRestaurantResponse, FormData>({
-  query: (formData) => ({
-    url: "restaurants",
-    method: "POST",
-    body: formData,
-    credentials: "include" as const,
-  }),
-  invalidatesTags: ["Restaurant"],
-}),
+      query: (formData) => ({
+        url: "restaurants",
+        method: "POST",
+        body: formData,
+        credentials: "include" as const,
+      }),
+      invalidatesTags: ["Restaurant"],
+    }),
+
     getRestaurantsWithoutQr: builder.query<GetAllRestaurantsResponse, void>({
       query: () => ({
         url: "restaurants/without-qr",
