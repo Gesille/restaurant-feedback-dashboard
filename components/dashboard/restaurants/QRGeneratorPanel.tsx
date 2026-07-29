@@ -339,14 +339,14 @@ const { data: detailsRes } = useGetFeedbackDetailsQuery({ restaurantId: restaura
       <SectionTitle>All feedback</SectionTitle>
       <div className="flex gap-2">
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/analytics/${restaurantId}/details/pdf`}
+           href={`${process.env.NEXT_PUBLIC_SERVER_URL}/analytics/details/pdf/${restaurantId}`}
           className="rounded-full border px-3 py-1 text-[11px] uppercase tracking-wide transition-colors"
           style={{ borderColor: BRASS, color: BRASS }}
         >
           Download PDF
         </a>
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/analytics/${restaurantId}/details/excel`}
+           href={`${process.env.NEXT_PUBLIC_SERVER_URL}/analytics/details/excel/${restaurantId}`}
           className="rounded-full border px-3 py-1 text-[11px] uppercase tracking-wide transition-colors"
           style={{ borderColor: SAGE, color: SAGE }}
         >
