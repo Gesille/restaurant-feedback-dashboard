@@ -49,7 +49,7 @@ export default function RestaurantAnalyticsPage() {
   const { data: waiterRes } = useGetWaiterPerformanceQuery(restaurantId!, { skip });
   const { data: distRes } = useGetRatingDistributionQuery(restaurantId!, { skip });
   const { data: trendRes } = useGetTrendQuery({ restaurantId: restaurantId! }, { skip });
-  const { data: evalRes } = useGetEvaluatorsQuery({ restaurantId: restaurantId! }, { skip });
+ 
 const { data: detailsRes } = useGetFeedbackDetailsQuery({ restaurantId: restaurantId!, pageSize: 100 }, { skip });
   const restaurants = restaurantsRes?.data ?? [];
   const overview = overviewRes?.data;
@@ -332,61 +332,6 @@ const { data: detailsRes } = useGetFeedbackDetailsQuery({ restaurantId: restaura
               )}
             </div>
 
-            {/* Evaluators */}
-            {evalRes?.data && (
-              <section>
-                <SectionTitle>Recent evaluations</SectionTitle>
-                <div
-                  className="overflow-x-auto rounded-sm border backdrop-blur-md"
-                  style={{ borderColor: HAIRLINE, backgroundColor: SURFACE }}
-                >
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr
-                        className="border-b text-left text-[11px] uppercase tracking-[0.15em]"
-                        style={{ borderColor: HAIRLINE, color: MUTED }}
-                      >
-                        <th className="px-4 py-3 font-medium">Guest</th>
-                        <th className="px-4 py-3 font-medium">Server</th>
-                        <th className="px-4 py-3 font-medium">Rating</th>
-                        <th className="px-4 py-3 font-medium">Would return</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {evalRes.data.data.map((e) => (
-                        <tr
-                          key={e.id}
-                          className="border-b last:border-b-0"
-                          style={{ borderColor: HAIRLINE }}
-                        >
-                          <td className="px-4 py-3 font-['Fraunces'] italic" style={{ color: INK }}>
-                            {e.customer_name}
-                          </td>
-                          <td className="px-4 py-3" style={{ color: MUTED }}>
-                            {e.waiter_name}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <ScoreBar value={e.overall_rating} />
-                              <span className="font-['IBM_Plex_Mono'] text-xs" style={{ color: INK }}>
-                                {e.overall_rating.toFixed(1)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <RecommendationTag value={e.recommendation} />
-                          </td>
-                          <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-xs" style={{ color: MUTED }}>
-                            {new Date(e.date).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
 
             {detailsRes?.data && (
   <section>
