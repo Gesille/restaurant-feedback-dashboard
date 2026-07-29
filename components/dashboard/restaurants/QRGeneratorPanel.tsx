@@ -3,6 +3,7 @@
 
 import {
   useGetEvaluatorsQuery,
+  useGetFeedbackDetailsQuery,
   useGetOverviewQuery,
   useGetRatingDistributionQuery,
   useGetTrendQuery,
@@ -49,7 +50,7 @@ export default function RestaurantAnalyticsPage() {
   const { data: distRes } = useGetRatingDistributionQuery(restaurantId!, { skip });
   const { data: trendRes } = useGetTrendQuery({ restaurantId: restaurantId! }, { skip });
   const { data: evalRes } = useGetEvaluatorsQuery({ restaurantId: restaurantId! }, { skip });
-
+const { data: detailsRes } = useGetFeedbackDetailsQuery({ restaurantId: restaurantId!, pageSize: 100 }, { skip });
   const restaurants = restaurantsRes?.data ?? [];
   const overview = overviewRes?.data;
 
@@ -386,6 +387,74 @@ export default function RestaurantAnalyticsPage() {
                 </div>
               </section>
             )}
+
+            {detailsRes?.data && (
+  <section>
+    <div className="mb-3 flex items-center justify-between">
+      <SectionTitle>All feedback</SectionTitle>
+      <div className="flex gap-2">
+        <a
+          href={`${process.env.NEXT_PUBLIC_API_URL}/analytics/${restaurantId}/details/pdf`}
+          className="rounded-full border px-3 py-1 text-[11px] uppercase tracking-wide transition-colors"
+          style={{ borderColor: BRASS, color: BRASS }}
+        >
+          Download PDF
+        </a>
+        <a
+          href={`${process.env.NEXT_PUBLIC_API_URL}/analytics/${restaurantId}/details/excel`}
+          className="rounded-full border px-3 py-1 text-[11px] uppercase tracking-wide transition-colors"
+          style={{ borderColor: SAGE, color: SAGE }}
+        >
+          Download Excel
+        </a>
+      </div>
+    </div>
+
+    <div
+      className="overflow-x-auto rounded-sm border backdrop-blur-md"
+      style={{ borderColor: HAIRLINE, backgroundColor: SURFACE }}
+    >
+      <table className="w-full text-sm">
+        <thead>
+          <tr
+            className="border-b text-left text-[11px] uppercase tracking-[0.15em]"
+            style={{ borderColor: HAIRLINE, color: MUTED }}
+          >
+            <th className="px-4 py-3 font-medium">Guest</th>
+            <th className="px-4 py-3 font-medium">Email</th>
+            <th className="px-4 py-3 font-medium">Receipt #</th>
+            <th className="px-4 py-3 font-medium">Server</th>
+            <th className="px-4 py-3 font-medium">Overall</th>
+            <th className="px-4 py-3 font-medium">Recommend</th>
+            <th className="px-4 py-3 font-medium">Comment</th>
+            <th className="px-4 py-3 font-medium">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {detailsRes.data.data.map((f) => (
+            <tr key={f.id} className="border-b last:border-b-0" style={{ borderColor: HAIRLINE }}>
+              <td className="px-4 py-3 font-['Fraunces'] italic" style={{ color: INK }}>{f.customer_name}</td>
+              <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-xs" style={{ color: MUTED }}>{f.customer_email}</td>
+              <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-xs" style={{ color: MUTED }}>{f.receipt_no}</td>
+              <td className="px-4 py-3" style={{ color: MUTED }}>{f.waiter_name}</td>
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ScoreBar value={f.overall_rating} />
+                  <span className="font-['IBM_Plex_Mono'] text-xs" style={{ color: INK }}>{f.overall_rating.toFixed(1)}</span>
+                </div>
+              </td>
+              <td className="px-4 py-3"><RecommendationTag value={f.recommendation} /></td>
+              <td className="px-4 py-3 text-xs" style={{ color: MUTED }}>{f.comment || '—'}</td>
+              <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-xs" style={{ color: MUTED }}>
+                {new Date(f.date).toLocaleDateString()}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)}
           </div>
         )}
       </div>

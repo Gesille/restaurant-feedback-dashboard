@@ -68,7 +68,40 @@ export interface RestaurantLeaderboardEntry {
   feedbackCount: number;
   averageOverallRating: number;
 }
+export type FeedbackDetail = {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  receipt_no: string;
+  waiter_name: string;
+  friendliness_rating: Rating;
+  attentiveness_rating: Rating;
+  menu_knowledge_rating: Rating;
+  service_speed_rating: Rating;
+  food_quality_rating: Rating;
+  cleanliness_rating: Rating;
+  overall_rating: Rating;
+  bartender_friendliness_rating: Rating;
+  bartender_drink_knowledge_rating: Rating;
+  bartender_speed_rating: Rating;
+  bartender_welcome_rating: Rating;
+  bartender_overall_rating: Rating;
+  hostess_friendliness_rating: Rating;
+  hostess_seating_rating: Rating;
+  hostess_welcome_rating: Rating;
+  hostess_communication_rating: Rating;
+  hostess_overall_rating: Rating;
+  recommendation: Recommendation;
+  comment?: string;
+  date: string;
+};
 
+export type FeedbackDetailsPage = {
+  total: number;
+  page: number;
+  pageSize: number;
+  data: FeedbackDetail[];
+};
 // ── Appends /:restaurantId only when it's actually provided ──
 const withRestaurant = (base: string, restaurantId?: string) =>
   restaurantId ? `${base}/${restaurantId}` : base;
@@ -188,6 +221,19 @@ export const feedbackAnalyticsApi = apiSlice.injectEndpoints({
         { type: "FeedbackAnalytics", id: `monthly-${arg.restaurantId}-${arg.year}` },
       ],
     }),
+    getFeedbackDetails: builder.query<
+      { success: boolean; data: FeedbackDetailsPage },
+      { restaurantId?: string; page?: number; pageSize?: number }
+    >({
+      query: ({ restaurantId, page = 1, pageSize = 50 }) => ({
+        url: `${withRestaurant("analytics/details", restaurantId)}?page=${page}&pageSize=${pageSize}`,
+        method: "GET",
+        credentials: "include" as const,
+      }),
+      providesTags: (_r, _e, arg) => [
+        { type: "FeedbackAnalytics", id: `details-${arg.restaurantId ?? "global"}` },
+      ],
+    }),
   }),
 });
   
@@ -200,5 +246,6 @@ export const {
   useGetTrendQuery,
   useGetRestaurantLeaderboardQuery,
   useGetDailyReportQuery,
-  useGetMonthlyReportQuery
+  useGetMonthlyReportQuery,
+  useGetFeedbackDetailsQuery
 } = feedbackAnalyticsApi;
