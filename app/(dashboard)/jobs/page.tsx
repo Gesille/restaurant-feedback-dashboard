@@ -59,6 +59,33 @@ function statusLabel(s?: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+
+// ADD THIS ↓
+function getClosingInfo(job: any): {
+  urgency: "overdue" | "soon" | null;
+  days: number;
+  dateLabel: string;
+} | null {
+  if (!job.closing_date || job.status !== "open") return null;
+
+  const closing = new Date(job.closing_date);
+  const diffMs = closing.getTime() - Date.now();
+  const diffDays = Math.ceil(diffMs / 86_400_000);
+
+  const dateLabel = closing.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (diffDays < 0) {
+    return { urgency: "overdue", days: Math.abs(diffDays), dateLabel };
+  }
+  if (diffDays <= 7) {
+    return { urgency: "soon", days: diffDays, dateLabel };
+  }
+  return { urgency: null, days: diffDays, dateLabel };
+}
 function LedgerFonts() {
   return (
     <style jsx global>{`
@@ -150,26 +177,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
     <div className="mx-auto max-w-6xl font-['Inter']">
       <LedgerFonts />
       <Topbar />
-      {(overdueCount > 0 || soonCount > 0) && (
-  <div className="mx-8 mb-4 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-    {overdueCount > 0 && (
-      <div className="flex items-center gap-2">
-        <AlertCircleIcon className="size-4 shrink-0 text-red-600" />
-        <span>
-          <strong>{overdueCount}</strong> open position{overdueCount > 1 ? "s are" : " is"} past its closing date and still marked open.
-        </span>
-      </div>
-    )}
-    {soonCount > 0 && (
-      <div className="flex items-center gap-2">
-        <ClockIcon className="size-4 shrink-0 text-amber-600" />
-        <span>
-          <strong>{soonCount}</strong> position{soonCount > 1 ? "s close" : " closes"} within the next 7 days.
-        </span>
-      </div>
-    )}
-  </div>
-)}
+      
       <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
         
         <motion.div
@@ -197,7 +205,36 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
           New job
         </button>
       </div>
-
+{(overdueCount > 0 || soonCount > 0) && (
+        <div className="mx-8 mb-4 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {alerts?.overdue.map((j: any) => {
+            const info = getClosingInfo(j);
+            return (
+              <div key={j.id} className="flex items-center gap-2">
+                <AlertCircleIcon className="size-4 shrink-0 text-red-600" />
+                <span>
+                  <strong>{j.title}</strong> ({j.restaurant_name || "—"}) closed{" "}
+                  <strong>{info?.days} day{info?.days !== 1 ? "s" : ""}</strong> ago on{" "}
+                  {info?.dateLabel} and is still open.
+                </span>
+              </div>
+            );
+          })}
+          {alerts?.expiringSoon.map((j: any) => {
+            const info = getClosingInfo(j);
+            return (
+              <div key={j.id} className="flex items-center gap-2">
+                <ClockIcon className="size-4 shrink-0 text-amber-600" />
+                <span>
+                  <strong>{j.title}</strong> ({j.restaurant_name || "—"}) closes on{" "}
+                  <strong>{info?.dateLabel}</strong> ({info?.days} day
+                  {info?.days !== 1 ? "s" : ""} left).
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
       {/* Stats */}
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Total" value={jobs.length} icon={InboxIcon} />
@@ -430,10 +467,33 @@ function JobRow({
       <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
         {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "—"}
       </td>
-      <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
-        {job.closing_date
-          ? new Date(job.closing_date).toLocaleDateString()
-          : "—"}
+     <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
+        {job.closing_date ? (
+          <>
+            {new Date(job.closing_date).toLocaleDateString()}
+            {(() => {
+              const info = getClosingInfo(job);
+              if (!info) return null;
+              if (info.urgency === "overdue") {
+                return (
+                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                    {info.days} day{info.days !== 1 ? "s" : ""} overdue
+                  </span>
+                );
+              }
+              if (info.urgency === "soon") {
+                return (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {info.days === 0 ? "Closes today" : `${info.days} day${info.days !== 1 ? "s" : ""} left`}
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </>
+        ) : (
+          "—"
+        )}
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-2 text-slate-400">
