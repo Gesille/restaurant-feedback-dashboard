@@ -1,7 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState } from "react";
-import { Loader2Icon, MailIcon, PhoneIcon, BriefcaseIcon, PlusIcon } from "lucide-react";
+import {
+  Loader2Icon,
+  MailIcon,
+  PhoneIcon,
+  BriefcaseIcon,
+  PlusIcon,
+  UserIcon,
+  CalendarClockIcon,
+  ClipboardListIcon,
+  BadgeDollarSignIcon,
+  MapPinIcon,
+  HashIcon,
+} from "lucide-react";
 import { EmployeeProfile, EmployeeSummary } from "@/types";
 import {
   useUpdateEmployeeBasicInfoMutation,
@@ -22,6 +34,31 @@ function currentCompensation(profile: EmployeeProfile) {
   return profile.job_tab.compensation.current;
 }
 
+function initials(name?: string) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase();
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  Active: "bg-[#EAF7EE] text-[#1E8A4C]",
+  "On Leave": "bg-[#FFF4E5] text-[#B4740E]",
+  Terminated: "bg-[#FDEAEA] text-[#C6362F]",
+};
+
+// ── Tabs config ─────────────────────────────────────────────────────────
+type TabKey = "personal" | "job" | "status" | "jobinfo" | "compensation";
+
+const TABS: { key: TabKey; label: string; icon: any }[] = [
+  { key: "personal", label: "Personal & Contact", icon: UserIcon },
+  { key: "job", label: "Job", icon: BriefcaseIcon },
+  { key: "status", label: "Employment Status", icon: ClipboardListIcon },
+  { key: "jobinfo", label: "Job Information", icon: MapPinIcon },
+  { key: "compensation", label: "Compensation", icon: BadgeDollarSignIcon },
+];
+
 export function EmployeeProfileView({
   profile,
   existingEmployees,
@@ -29,17 +66,112 @@ export function EmployeeProfileView({
   profile: EmployeeProfile;
   existingEmployees: EmployeeSummary[];
 }) {
+  const [activeTab, setActiveTab] = useState<TabKey>("personal");
+
   const jobInfo = currentJobInfo(profile);
   const status = currentStatus(profile);
   const comp = currentCompensation(profile);
 
   return (
-    <div className="px-8 py-8 space-y-6">
-      <BasicInfoSection profile={profile} />
-      <JobCoreSection employeeId={profile.id} job={profile.job_tab.job} />
-      <EmploymentStatusSection employeeId={profile.id} current={status} />
-      <JobInformationSection employeeId={profile.id} current={jobInfo} existingEmployees={existingEmployees} selfId={profile.id} />
-      <CompensationSection employeeId={profile.id} current={comp} />
+    <div className="min-h-screen bg-[#FBFAFF]">
+      <div className="mx-auto flex max-w-[1400px] gap-6 px-6 py-8 lg:px-8">
+        {/* ── Sidebar ─────────────────────────────────────────────── */}
+        <aside className="sticky top-8 hidden w-[280px] shrink-0 self-start lg:block">
+          <div className="overflow-hidden rounded-2xl border border-[#EDEBF7] bg-white shadow-sm">
+            <div className="h-16 bg-gradient-to-r from-[#6C4DF4] to-[#8F7BFA]" />
+            <div className="-mt-10 flex flex-col items-center px-6 pb-6 text-center">
+              <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
+                {initials(profile.full_name)}
+              </div>
+              <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">{profile.full_name}</p>
+              <p className="mt-0.5 text-sm text-slate-500">{jobInfo?.job_title || "—"}</p>
+
+              {status?.employment_status && (
+                <span
+                  className={`mt-3 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
+                    STATUS_STYLES[status.employment_status] || "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {status.employment_status}
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-4 border-t border-[#EDEBF7] px-6 py-5">
+              <SideRow icon={HashIcon} label="Employee #" value={profile.vitals.employee_number} />
+              <SideRow icon={MailIcon} label="Work Email" value={profile.vitals.work_email} />
+              <SideRow icon={PhoneIcon} label="Work Phone" value={profile.vitals.work_phone} />
+              <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
+              <SideRow icon={BriefcaseIcon} label="Department" value={jobInfo?.department} />
+              <SideRow
+                icon={CalendarClockIcon}
+                label="Hire Date"
+                value={profile.job_tab.job.hire_date ? new Date(profile.job_tab.job.hire_date).toLocaleDateString() : undefined}
+              />
+            </div>
+          </div>
+        </aside>
+
+        {/* ── Main column ─────────────────────────────────────────── */}
+        <div className="min-w-0 flex-1">
+          {/* Mobile identity strip (sidebar collapses below lg) */}
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#EDEBF7] bg-white p-4 shadow-sm lg:hidden">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#F1EDFF] font-['Fraunces'] italic text-[#6C4DF4]">
+              {initials(profile.full_name)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-['Fraunces'] italic text-slate-900">{profile.full_name}</p>
+              <p className="truncate text-xs text-slate-500">{jobInfo?.job_title || "—"}</p>
+            </div>
+          </div>
+
+          {/* Tab bar */}
+          <div className="overflow-x-auto rounded-2xl border border-[#EDEBF7] bg-white p-1.5 shadow-sm">
+            <nav className="flex min-w-max gap-1">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+                      active ? "bg-[#6C4DF4] text-white shadow-sm" : "text-slate-500 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
+                    }`}
+                  >
+                    <Icon className="size-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Tab content */}
+          <div className="mt-6">
+            {activeTab === "personal" && <BasicInfoSection profile={profile} />}
+            {activeTab === "job" && <JobCoreSection employeeId={profile.id} job={profile.job_tab.job} />}
+            {activeTab === "status" && <EmploymentStatusSection employeeId={profile.id} current={status} />}
+            {activeTab === "jobinfo" && (
+              <JobInformationSection employeeId={profile.id} current={jobInfo} existingEmployees={existingEmployees} selfId={profile.id} />
+            )}
+            {activeTab === "compensation" && <CompensationSection employeeId={profile.id} current={comp} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SideRow({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
+      <div className="min-w-0">
+        <p className="font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
+        <p className="truncate text-sm text-slate-700">{value || "—"}</p>
+      </div>
     </div>
   );
 }
