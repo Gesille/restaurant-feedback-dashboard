@@ -9,11 +9,12 @@ import { motion, type Variants } from "framer-motion";
 import {
   LayoutGrid,
   UtensilsCrossed,
-  
+
   BarChart3,
- 
+
   ScanLine,
   Users,
+  IdCard,
   FileBarChart,
   ChevronLeft,
   ChevronRight,
@@ -34,6 +35,7 @@ import { useGetAllQuestionsQuery } from "@/redux/questions/questionApi";
 const mainNav: { href: string; label: string; icon: any; color: BrandColor; badge?: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "violet" },
   { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed, color: "teal" },
+  { href: "/employees", label: "Employees", icon: IdCard, color: "amber" },
   { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber"},
   { href: "/analytics", label: "Analytics", icon: BarChart3, color: "pink" },
 ];
@@ -165,9 +167,14 @@ function NavRow({
 const RAIL_WIDTH = 76;
 const FULL_WIDTH = 250;
 
+// Matches a single employee's detail route ("/employees/68f2c1..."), but not
+// the list route itself ("/employees") or a nested action route
+// ("/employees/new"). Adjust this if you add more sub-routes under /employees.
+const EMPLOYEE_DETAIL_RE = /^\/employees\/[^/]+$/;
+
 export function Sidebar() {
   const pathname = usePathname();
-  const { user } = useSelector((state: any) => state.auth); 
+  const { user } = useSelector((state: any) => state.auth);
   const [open, setOpen] = useState(true);
   const { data: restaurantsRes } = useGetAllRestaurantsQuery();
   const restaurantCount = restaurantsRes?.data?.length ?? 0;
@@ -187,6 +194,14 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
     if (href === "/question") return pendingQuestionsCount > 0 ? String(pendingQuestionsCount) : undefined;
     return fallback;
   };
+
+  // A single employee's profile is a full-bleed BambooHR-style page — no
+  // app nav alongside it, same way BambooHR's own employee page works.
+  // Since the parent layout is a flex row (<Sidebar /><main>), rendering
+  // nothing here just lets <main> take the full width.
+  if (EMPLOYEE_DETAIL_RE.test(pathname)) {
+    return null;
+  }
 
   return (
     <motion.aside

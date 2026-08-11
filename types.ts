@@ -182,3 +182,221 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+
+
+// types/employee.ts
+// Mirrors src/services/employee.service.ts + src/models/employee.model.ts on the backend.
+// Add `export * from './employee';` to your central "@/types" barrel file
+// (or paste these directly into your existing types file).
+
+export type SelfServiceAccess = "full_access" | "no_access";
+
+// ── Effective-dated table entries (Job tab "Add Entry" rows) ─────────────
+
+export interface EmploymentStatusEntry {
+  _id?: string;
+  effective_date: string;
+  employment_status: string;
+  comment?: string;
+}
+
+export interface CompensationEntry {
+  _id?: string;
+  effective_date: string;
+  pay_schedule: string;
+  pay_type: string;
+  pay_rate_amount: number;
+  pay_rate_currency: string;
+  pay_rate_per: string;
+  overtime?: string;
+  change_reason?: string;
+  comment?: string;
+}
+
+export interface AllowanceEntry {
+  _id?: string;
+  effective_date: string;
+  phone?: number;
+  travel?: number;
+  housing?: number;
+  electricity?: number;
+  acting?: number;
+  additional_duties?: number;
+  shift_leader?: number;
+  call_out?: number;
+  other?: number;
+  currency: string;
+}
+
+export interface JobInformationEntry {
+  _id?: string;
+  effective_date: string;
+  location?: string;
+  division?: string;
+  department?: string;
+  teams?: string;
+  job_title: string;
+  reports_to?: string; // Employee id
+}
+
+export interface AirportSecurityPassEntry {
+  _id?: string;
+  issue_date: string;
+  expiration_date: string;
+  comments?: string;
+}
+
+export interface BonusEntry {
+  _id?: string;
+  date: string;
+  amount: number;
+  reason?: string;
+  comment?: string;
+}
+
+export interface CommissionEntry {
+  _id?: string;
+  date: string;
+  amount: number;
+  comment?: string;
+}
+
+export interface EquityEntry {
+  _id?: string;
+  grant_type: string;
+  custom_grant_type_name?: string;
+  grant_date: string;
+  vesting_start_date?: string;
+  equity_granted: number;
+  strike_price?: number;
+  vesting_schedule?: string;
+  vesting_months?: number;
+  cliff_months?: number;
+}
+
+export interface PayRates {
+  daily?: number;
+  holiday?: number;
+  sick?: number;
+  vacation_pay_in_lieu_rate?: number;
+}
+
+export interface PotentialBonus {
+  annual_percentage?: number;
+  annual_amount?: number;
+  annual_amount_currency?: string;
+}
+
+// current/history/future split returned for every effective-dated table
+export interface EffectiveDatedResult<T> {
+  current?: T;
+  history: T[];
+  future: T[];
+}
+
+// ── List row (GET /employees) ─────────────────────────────────────────────
+
+export interface EmployeeSummary {
+  id: string;
+  employee_number?: string;
+  full_name: string;
+  preferred_name?: string;
+  job_title?: string;
+  department?: string;
+  division?: string;
+  location?: string;
+  employment_status?: string;
+  work_email?: string;
+  hire_date?: string;
+  self_service_access: SelfServiceAccess;
+}
+
+// ── Single profile (GET /employees/:id) ────────────────────────────────────
+
+export interface EmployeeVitals {
+  mobile_phone?: string;
+  work_email?: string;
+  address?: string;
+  job_title?: string;
+  employment_status?: string;
+  department?: string;
+  company_name?: string;
+  hire_date?: string;
+  tenure_days?: number;
+  manager?: { id: string; name: string; job_title?: string } | null;
+}
+
+export interface EmployeeJobTab {
+  job: {
+    hire_date?: string;
+    job_code?: string;
+    direct_reports_count: number;
+    probation_end_date?: string;
+    contract_end_date?: string;
+    contracted_hours_per_week?: number;
+    contracted_days_per_week?: number;
+  };
+  employment_status: EffectiveDatedResult<EmploymentStatusEntry>;
+  compensation: EffectiveDatedResult<CompensationEntry>;
+  allowances: EffectiveDatedResult<AllowanceEntry>;
+  job_information: EffectiveDatedResult<JobInformationEntry>;
+  pay_rates?: PayRates;
+  airport_security_pass_history: AirportSecurityPassEntry[];
+  potential_bonus?: PotentialBonus;
+  bonus_history: BonusEntry[];
+  commission_history: CommissionEntry[];
+  equity_history: EquityEntry[];
+}
+
+export interface EmployeeProfile {
+  id: string;
+  full_name: string;
+  vitals: EmployeeVitals;
+  job_tab: EmployeeJobTab;
+}
+
+// ── Create ("New Employee" form) ────────────────────────────────────────
+
+export interface CreateEmployeeRequest {
+  employee_number?: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  preferred_name?: string;
+  birth_date?: string;
+  gender?: string;
+  marital_status?: string;
+
+  street1?: string;
+  street2?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+
+  hire_date?: string;
+
+  work_phone?: string;
+  work_phone_ext?: string;
+  mobile_phone?: string;
+  home_phone?: string;
+  work_email?: string;
+  home_email?: string;
+
+  employment_status?: string;
+
+  job_title?: string;
+  reports_to?: string;
+  department?: string;
+  division?: string;
+  location?: string;
+
+  pay_schedule?: string;
+  pay_type?: string;
+  pay_rate_amount?: number;
+  pay_rate_currency?: string;
+  pay_rate_per?: string;
+
+  self_service_access?: SelfServiceAccess;
+}
