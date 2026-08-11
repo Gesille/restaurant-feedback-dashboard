@@ -167,11 +167,6 @@ function NavRow({
 const RAIL_WIDTH = 76;
 const FULL_WIDTH = 250;
 
-// Matches a single employee's detail route ("/employees/68f2c1..."), but not
-// the list route itself ("/employees") or a nested action route
-// ("/employees/new"). Adjust this if you add more sub-routes under /employees.
-const EMPLOYEE_DETAIL_RE = /^\/employees\/[^/]+$/;
-
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useSelector((state: any) => state.auth);
@@ -194,14 +189,6 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
     if (href === "/question") return pendingQuestionsCount > 0 ? String(pendingQuestionsCount) : undefined;
     return fallback;
   };
-
-  // A single employee's profile is a full-bleed BambooHR-style page — no
-  // app nav alongside it, same way BambooHR's own employee page works.
-  // Since the parent layout is a flex row (<Sidebar /><main>), rendering
-  // nothing here just lets <main> take the full width.
-  if (EMPLOYEE_DETAIL_RE.test(pathname)) {
-    return null;
-  }
 
   return (
     <motion.aside
