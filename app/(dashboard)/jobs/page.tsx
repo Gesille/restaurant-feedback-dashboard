@@ -60,7 +60,6 @@ function statusLabel(s?: string) {
 }
 
 
-// ADD THIS ↓
 function getClosingInfo(job: any): {
   urgency: "overdue" | "soon" | null;
   days: number;
@@ -85,6 +84,23 @@ function getClosingInfo(job: any): {
     return { urgency: "soon", days: diffDays, dateLabel };
   }
   return { urgency: null, days: diffDays, dateLabel };
+}
+function getElapsedLabel(createdAt?: string): string | null {
+  if (!createdAt) return null;
+  const posted = new Date(createdAt);
+  if (Number.isNaN(posted.getTime())) return null;
+
+  const diffDays = Math.floor((Date.now() - posted.getTime()) / 86_400_000);
+
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 30) return `${diffDays} days ago`;
+
+  const months = Math.floor(diffDays / 30);
+  if (months < 12) return `${months} month${months !== 1 ? "s" : ""} ago`;
+
+  const years = Math.floor(months / 12);
+  return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 function LedgerFonts() {
   return (
@@ -464,8 +480,17 @@ function JobRow({
           {statusLabel(job.status)}
         </span>
       </td>
-      <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
-        {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "—"}
+    <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
+        {job.createdAt ? (
+          <>
+            {new Date(job.createdAt).toLocaleDateString()}
+            <div className="text-[10px] text-slate-400">
+              {getElapsedLabel(job.createdAt)}
+            </div>
+          </>
+        ) : (
+          "—"
+        )}
       </td>
      <td className="px-4 py-3 font-['IBM_Plex_Mono'] text-slate-500">
         {job.closing_date ? (
