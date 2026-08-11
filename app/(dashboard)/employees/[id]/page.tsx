@@ -14,7 +14,7 @@ export default function EmployeeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-24 text-slate-400">
+      <div className="flex items-center justify-center  text-slate-400">
         <Loader2Icon className="size-4 animate-spin" />
         <span className="text-sm">Loading employee…</span>
       </div>
