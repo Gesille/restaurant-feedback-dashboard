@@ -12,7 +12,7 @@ export default async function QrGeneratorPage({
   return (
     <>
 
-      <div className="px-8 py-6">
+      <div className="mx-auto max-w-6xl">
              <Topbar 
   title="Restaurant Analytics"
   subtitle="Performance insights and customer feedback for this restaurant"
