@@ -12,7 +12,7 @@ export default async function QrGeneratorPage({
   return (
     <>
    
-      <div className="px-8 py-6 ">
+      <div className="mx-auto max-w-6xl">
            <Topbar title="QR Generator" subtitle="Create a branded, trackable QR code in seconds" />
            <div className="px-8 py-6 ">
              <AdminCvDashboard />
