@@ -125,7 +125,7 @@ function NavRow({
           whileHover={{ x: active || collapsed ? 0 : 3 }}
           whileTap={{ scale: 0.97 }}
           className={clsx(
-            "relative z-10 flex items-center gap-3 rounded-[11px] py-2.5 text-sm font-semibold font-['Inter'] transition-colors",
+            "relative z-10 flex items-center gap-3 rounded-[11px] py-2 text-sm font-semibold font-['Inter'] transition-colors",
             collapsed ? "justify-center px-0" : "px-3",
             active ? "text-white" : "text-[#6B6685] hover:text-[#1A1730]"
           )}
@@ -208,7 +208,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
       initial={false}
       animate={{ width: open ? FULL_WIDTH : RAIL_WIDTH }}
       transition={{ duration: 0.28, ease: "easeInOut" }}
-      className="sticky top-0 z-30 flex h-screen shrink-0 flex-col gap-1.5 overflow-hidden border-r border-[#EDEBF7] bg-white py-6 text-[#1A1730]"
+      className="sticky top-0 z-30 flex h-screen shrink-0 flex-col gap-1.5 overflow-hidden border-r border-[#EDEBF7] bg-white py-5 text-[#1A1730]"
     >
   
     
@@ -231,14 +231,14 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
 
       <div
         className={clsx(
-          "relative flex-1 flex flex-col overflow-y-auto overflow-x-hidden gap-1.5",
+          "relative flex-1 flex flex-col overflow-y-hidden overflow-x-hidden gap-1",
           open ? "px-4.5" : "px-3"
         )}
       >
         <Link
           href="/"
           className={clsx(
-            "flex items-center gap-2.5 pb-6.5 pt-1.5",
+            "flex items-center gap-2.5 pb-4 pt-1.5",
             open ? "px-2.5" : "justify-center px-0"
           )}
         >
@@ -261,11 +261,11 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
         </Link>
 
         {open && (
-          <p className="mb-2 mt-1 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
+          <p className="mb-1.5 mt-0.5 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
             Overview
           </p>
         )}
-       <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-1.5">
+       <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-1">
   {mainNav.map((item) => (
     <NavRow
       key={item.href}
@@ -279,7 +279,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
 </motion.div>
 
         {open && (
-          <p className="mb-2 mt-4 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
+          <p className="mb-1.5 mt-3 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
             Workspace
           </p>
         )}
@@ -287,7 +287,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
           variants={listVariants}
           initial="hidden"
           animate="show"
-          className={clsx("flex flex-col gap-1.5", !open && "mt-4")}
+          className={clsx("flex flex-col gap-1", !open && "mt-3")}
         >
           {workspaceNav.map((item) => (
             <NavRow
@@ -301,7 +301,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
           
         </motion.div>
         {open && (
-  <p className="mb-2 mt-4 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
+  <p className="mb-1.5 mt-3 px-2.5 font-['IBM_Plex_Mono'] text-[10.5px] font-medium uppercase tracking-widest text-[#B4AFC9]">
     Recruitment
   </p>
 )}
@@ -310,7 +310,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
   variants={listVariants}
   initial="hidden"
   animate="show"
-  className={clsx("flex flex-col gap-1.5", !open && "mt-4")}
+  className={clsx("flex flex-col gap-1", !open && "mt-3")}
 >
 {recruitmentNav.map((item) => (
     <NavRow
@@ -330,7 +330,7 @@ const { data: contactsRes } = useGetContactsQuery({ status: "new", limit: 1 });
           href="/Profile"
           className={clsx(
             "flex items-center gap-2.5 rounded-[14px] border border-[#EDEBF7] bg-[#FBFAFF] hover:bg-[#F5F3FF]",
-            open ? "p-3.5" : "justify-center p-2"
+            open ? "p-3" : "justify-center p-2"
           )}
           title={!open ? (user?.name ?? "Guest") : undefined}
         >
