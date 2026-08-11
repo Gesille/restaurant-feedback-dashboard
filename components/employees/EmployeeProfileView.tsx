@@ -73,8 +73,8 @@ export function EmployeeProfileView({
   const comp = currentCompensation(profile);
 
   return (
-    <div className="min-h-screen bg-[#FBFAFF]">
-      <div className="mx-auto flex max-w-[1400px] gap-6 px-6 py-8 lg:px-8">
+    <div className="min-h-screen w-full bg-[#FBFAFF]">
+      <div className="flex w-full gap-6 px-6 py-8 lg:px-10">
         {/* ── Sidebar ─────────────────────────────────────────────── */}
         <aside className="sticky top-8 hidden w-[280px] shrink-0 self-start lg:block">
           <div className="overflow-hidden rounded-2xl border border-[#EDEBF7] bg-white shadow-sm">
