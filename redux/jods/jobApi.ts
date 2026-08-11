@@ -73,7 +73,11 @@ export const jobApi = apiSlice.injectEndpoints({
         { type: 'Job', id: 'LIST' },
       ],
     }),
-
+getJobAlerts: builder.query<{ expiringSoon: Job[]; overdue: Job[] }, number | void>({
+  query: (days) => `/jobs/alerts${days ? `?days=${days}` : ''}`,
+  transformResponse: (response: ApiResponse<{ expiringSoon: Job[]; overdue: Job[] }>) => response.data,
+  providesTags: [{ type: 'Job', id: 'LIST' }],
+}),
     
     deleteJob: builder.mutation<void, string>({
       query: (id) => ({
@@ -105,5 +109,6 @@ export const {
   useCreateJobMutation,
   useUpdateJobMutation,
   useDeleteJobMutation,
-  useApplyToJobMutation
+  useApplyToJobMutation,
+  useGetJobAlertsQuery,
 } = jobApi;

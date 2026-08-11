@@ -20,6 +20,8 @@ import {
   BuildingIcon,
   AlertTriangleIcon,
   CalendarIcon,
+  ClockIcon,
+  AlertCircleIcon,
 } from "lucide-react";
 
 import { Job, JobFilters, JobStatus, EmploymentType } from "@/types";
@@ -29,6 +31,7 @@ import {
   useCreateJobMutation,
   useUpdateJobMutation,
   useDeleteJobMutation,
+  useGetJobAlertsQuery,
 } from "@/redux/jods/jobApi";
 import { Topbar } from "@/components/layout/Topbar";
 import { useGetAllRestaurantsQuery } from "@/redux/restaurants/restaurantApi";
@@ -74,7 +77,9 @@ export default function AdminJobsDashboard() {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [creatingOpen, setCreatingOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
-
+const { data: alerts } = useGetJobAlertsQuery(7); 
+const overdueCount = alerts?.overdue.length ?? 0;
+const soonCount = alerts?.expiringSoon.length ?? 0;
   const filters: JobFilters = useMemo(
     () => ({
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
@@ -146,6 +151,26 @@ export default function AdminJobsDashboard() {
       <LedgerFonts />
       <Topbar />
       <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
+        {(overdueCount > 0 || soonCount > 0) && (
+  <div className="mx-8 mb-4 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    {overdueCount > 0 && (
+      <div className="flex items-center gap-2">
+        <AlertCircleIcon className="size-4 shrink-0 text-red-600" />
+        <span>
+          <strong>{overdueCount}</strong> open position{overdueCount > 1 ? "s are" : " is"} past its closing date and still marked open.
+        </span>
+      </div>
+    )}
+    {soonCount > 0 && (
+      <div className="flex items-center gap-2">
+        <ClockIcon className="size-4 shrink-0 text-amber-600" />
+        <span>
+          <strong>{soonCount}</strong> position{soonCount > 1 ? "s close" : " closes"} within the next 7 days.
+        </span>
+      </div>
+    )}
+  </div>
+)}
         <motion.div
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
