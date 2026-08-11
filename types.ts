@@ -352,8 +352,62 @@ export interface EmployeeJobTab {
 export interface EmployeeProfile {
   id: string;
   full_name: string;
-  vitals: EmployeeVitals;
-  job_tab: EmployeeJobTab;
+  vitals: {
+    employee_number?: string;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    preferred_name?: string;
+    birth_date?: string;
+    gender?: string;
+    marital_status?: string;
+
+    street1?: string;
+    street2?: string;
+    city?: string;
+    province?: string;
+    postal_code?: string;
+    country?: string;
+    address?: string;
+
+    work_phone?: string;
+    work_phone_ext?: string;
+    mobile_phone?: string;
+    home_phone?: string;
+    work_email?: string;
+    home_email?: string;
+
+    self_service_access: "full_access" | "no_access";
+
+    job_title?: string;
+    employment_status?: string;
+    department?: string;
+    company_name?: string;
+    hire_date?: string;
+    tenure_days?: number;
+    manager?: { id: string; name: string; job_title?: string } | null;
+  };
+  job_tab: {
+    job: {
+      hire_date?: string;
+      job_code?: string;
+      direct_reports_count: number;
+      probation_end_date?: string;
+      contract_end_date?: string;
+      contracted_hours_per_week?: number;
+      contracted_days_per_week?: number;
+    };
+    employment_status: { current?: any; history: any[]; future: any[] };
+    compensation: { current?: any; history: any[]; future: any[] };
+    allowances: { current?: any; history: any[]; future: any[] };
+    job_information: { current?: any; history: any[]; future: any[] };
+    pay_rates?: any;
+    airport_security_pass_history: any[];
+    potential_bonus?: any;
+    bonus_history: any[];
+    commission_history: any[];
+    equity_history: any[];
+  };
 }
 
 // ── Create ("New Employee" form) ────────────────────────────────────────

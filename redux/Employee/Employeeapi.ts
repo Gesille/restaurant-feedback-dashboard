@@ -35,6 +35,44 @@ export const employeeApi = apiSlice.injectEndpoints({
         response.data,
       invalidatesTags: [{ type: "Employee", id: "LIST" }],
     }),
+updateEmployeeBasicInfo: builder.mutation<
+      EmployeeProfile,
+      {
+        id: string;
+        employee_number?: string;
+        first_name?: string;
+        middle_name?: string;
+        last_name?: string;
+        preferred_name?: string;
+        birth_date?: string;
+        gender?: string;
+        marital_status?: string;
+        street1?: string;
+        street2?: string;
+        city?: string;
+        province?: string;
+        postal_code?: string;
+        country?: string;
+        work_phone?: string;
+        work_phone_ext?: string;
+        mobile_phone?: string;
+        home_phone?: string;
+        work_email?: string;
+        home_email?: string;
+        self_service_access?: "full_access" | "no_access";
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/employees/${id}`,
+        method: "PUT",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<EmployeeProfile>) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Employee", id },
+        { type: "Employee", id: "LIST" },
+      ],
+    }),
 
     deleteEmployee: builder.mutation<void, string>({
       query: (id) => ({
@@ -277,4 +315,5 @@ export const {
   useAddEquityEntryMutation,
   useUpdatePayRatesMutation,
   useUpdatePotentialBonusMutation,
+    useUpdateEmployeeBasicInfoMutation,
 } = employeeApi;
