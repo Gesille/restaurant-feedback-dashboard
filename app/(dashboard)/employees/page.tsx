@@ -32,6 +32,20 @@ import { useCreateEmployeeMutation, useDeleteEmployeeMutation, useGetAllEmployee
 
 const PAGE_SIZE = 25;
 
+// BambooHR-style default employment statuses. Editable here — this list is
+// purely a UI convenience; the backend still stores whatever string is sent.
+const EMPLOYMENT_STATUS_OPTIONS = [
+  "Full-time",
+  "Part-time",
+  "Probationary Full-time",
+  "Probationary Part-time",
+  "Contract",
+  "Temporary",
+  "Intern",
+  "Leave of Absence",
+  "Terminated",
+];
+
 function LedgerFonts() {
   return (
     <style jsx global>{`
@@ -47,6 +61,14 @@ function initials(name: string) {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+}
+
+// Distinct, non-empty, alphabetically sorted values — used to seed the
+// Job Information combo selects from whatever's already on file.
+function uniqueSorted(values: (string | undefined)[]): string[] {
+  return Array.from(
+    new Set(values.filter((v): v is string => Boolean(v && v.trim()))),
+  ).sort((a, b) => a.localeCompare(b));
 }
 
 export default function EmployeesPage() {
@@ -382,6 +404,30 @@ function NewEmployeeContent({
         [key]: e.target.value === "" ? undefined : Number(e.target.value),
       }));
 
+  // Field-level setter used by ComboField (works off a value, not an event).
+  const setField = (key: keyof CreateEmployeeRequest) => (value: string) =>
+    setForm((f) => ({ ...f, [key]: value }));
+
+  // Combo-select option lists, seeded from whatever's already in the
+  // employee roster — same idea as "Reports To", so the list grows as the
+  // company grows instead of you having to manage it separately.
+  const jobTitleOptions = useMemo(
+    () => uniqueSorted(existingEmployees.map((e) => e.job_title)),
+    [existingEmployees],
+  );
+  const departmentOptions = useMemo(
+    () => uniqueSorted(existingEmployees.map((e) => e.department)),
+    [existingEmployees],
+  );
+  const divisionOptions = useMemo(
+    () => uniqueSorted(existingEmployees.map((e) => e.division)),
+    [existingEmployees],
+  );
+  const locationOptions = useMemo(
+    () => uniqueSorted(existingEmployees.map((e) => e.location)),
+    [existingEmployees],
+  );
+
   const handleSave = async () => {
     if (!form.first_name.trim()) {
       setFormError("First Name is required");
@@ -522,26 +568,31 @@ function NewEmployeeContent({
           </div>
         </FormSection>
 
-        {/* Employment Status */}
+        {/* Employment Status — BambooHR-style select with a fixed default
+            list, still lets you add a one-off custom status via "+ Add new". */}
         <FormSection title="Employment Status">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Employment Status">
-              <input
-                value={form.employment_status || ""}
-                onChange={set("employment_status")}
-                placeholder="e.g. Probation Full-time"
-                className={inputCls}
-              />
-            </FormField>
+            <ComboField
+              label="Employment Status"
+              value={form.employment_status || ""}
+              onChange={setField("employment_status")}
+              options={EMPLOYMENT_STATUS_OPTIONS}
+              placeholder="e.g. Probation Full-time"
+            />
           </div>
         </FormSection>
 
-        {/* Job Information */}
+        {/* Job Information — every field here is a select sourced from your
+            existing roster, matching how "Reports To" already behaves. */}
         <FormSection title="Job Information">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Job Title">
-              <input value={form.job_title || ""} onChange={set("job_title")} className={inputCls} />
-            </FormField>
+            <ComboField
+              label="Job Title"
+              value={form.job_title || ""}
+              onChange={setField("job_title")}
+              options={jobTitleOptions}
+              placeholder="e.g. Front Desk Manager"
+            />
             <FormField label="Reports To">
               <select value={form.reports_to || ""} onChange={set("reports_to")} className={inputCls}>
                 <option value="">– Select –</option>
@@ -552,15 +603,27 @@ function NewEmployeeContent({
                 ))}
               </select>
             </FormField>
-            <FormField label="Department">
-              <input value={form.department || ""} onChange={set("department")} className={inputCls} />
-            </FormField>
-            <FormField label="Division">
-              <input value={form.division || ""} onChange={set("division")} className={inputCls} />
-            </FormField>
-            <FormField label="Location">
-              <input value={form.location || ""} onChange={set("location")} className={inputCls} />
-            </FormField>
+            <ComboField
+              label="Department"
+              value={form.department || ""}
+              onChange={setField("department")}
+              options={departmentOptions}
+              placeholder="e.g. Kitchen"
+            />
+            <ComboField
+              label="Division"
+              value={form.division || ""}
+              onChange={setField("division")}
+              options={divisionOptions}
+              placeholder="e.g. Front of House"
+            />
+            <ComboField
+              label="Location"
+              value={form.location || ""}
+              onChange={setField("location")}
+              options={locationOptions}
+              placeholder="e.g. Jolly Harbour"
+            />
           </div>
         </FormSection>
 
@@ -692,6 +755,79 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
       </span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+// A BambooHR-style "combo" field: a real <select> built from known/existing
+// values, with a "+ Add new…" option that flips it into a plain text input
+// for a one-off value not yet in the list. Falls back to the text input by
+// default if the current value isn't in `options` (e.g. editing a record
+// whose department was typed in before this list existed).
+function ComboField({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  placeholder?: string;
+}) {
+  const [customMode, setCustomMode] = useState(
+    value !== "" && !options.includes(value),
+  );
+
+  return (
+    <FormField label={label}>
+      {customMode ? (
+        <div className="flex gap-2">
+          <input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className={inputCls}
+            autoFocus
+          />
+          {options.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setCustomMode(false);
+                onChange("");
+              }}
+              className="shrink-0 rounded-lg border border-[#EDEBF7] px-2.5 text-xs font-medium text-slate-500 hover:bg-[#FBFAFF]"
+              title="Choose from list instead"
+            >
+              List
+            </button>
+          )}
+        </div>
+      ) : (
+        <select
+          value={value}
+          onChange={(e) => {
+            if (e.target.value === "__custom__") {
+              setCustomMode(true);
+              onChange("");
+            } else {
+              onChange(e.target.value);
+            }
+          }}
+          className={inputCls}
+        >
+          <option value="">– Select –</option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+          <option value="__custom__">+ Add new…</option>
+        </select>
+      )}
+    </FormField>
   );
 }
 
