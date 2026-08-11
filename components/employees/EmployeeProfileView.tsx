@@ -176,17 +176,21 @@ function SideRow({ icon: Icon, label, value }: { icon: any; label: string; value
   );
 }
 
-function Vital({ icon: Icon, label, value }: { icon?: any; label: string; value?: string }) {
+// Full-width stacked row: label on the left, value on the right, one field
+// per line. Used for read-only section views so values never crowd or run
+// into each other, no matter how long they are.
+function InfoRow({ icon: Icon, label, value }: { icon?: any; label: string; value?: string }) {
   return (
-    <div>
-      <span className="font-['IBM_Plex_Mono'] text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <div className="mt-1 flex items-center gap-1.5">
-        {Icon && <Icon className="size-3.5 text-slate-400" />}
-        <span>{value || "—"}</span>
+    <div className="flex items-start gap-6 py-3.5 first:pt-0 last:pb-0">
+      <div className="flex w-44 shrink-0 items-center gap-2 pt-0.5 font-['IBM_Plex_Mono'] text-[11px] font-medium uppercase tracking-wide text-slate-400">
+        {Icon && <Icon className="size-3.5 shrink-0 text-slate-400" />}
+        <span>{label}</span>
       </div>
+      <div className="min-w-0 flex-1 break-words text-sm text-slate-800">{value || "—"}</div>
     </div>
   );
 }
+
 
 // ── Personal / Address / Contact / Access — all editable in place ────────
 function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
@@ -269,19 +273,19 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
     return (
       <FormSection title="Personal & Contact">
         <div className="flex items-start justify-between gap-4">
-          <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-            <Vital label="Name" value={profile.full_name} />
-            <Vital label="Preferred Name" value={v.preferred_name} />
-            <Vital label="Birth Date" value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined} />
-            <Vital label="Gender" value={v.gender} />
-            <Vital label="Marital Status" value={v.marital_status} />
-            <Vital label="Address" value={v.address} />
-            <Vital icon={MailIcon} label="Work Email" value={v.work_email} />
-            <Vital label="Home Email" value={v.home_email} />
-            <Vital icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
-            <Vital label="Mobile" value={v.mobile_phone} />
-            <Vital label="Home Phone" value={v.home_phone} />
-            <Vital label="Self-service access" value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"} />
+          <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+            <InfoRow label="Name" value={profile.full_name} />
+            <InfoRow label="Preferred Name" value={v.preferred_name} />
+            <InfoRow label="Birth Date" value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined} />
+            <InfoRow label="Gender" value={v.gender} />
+            <InfoRow label="Marital Status" value={v.marital_status} />
+            <InfoRow label="Address" value={v.address} />
+            <InfoRow icon={MailIcon} label="Work Email" value={v.work_email} />
+            <InfoRow label="Home Email" value={v.home_email} />
+            <InfoRow icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
+            <InfoRow label="Mobile" value={v.mobile_phone} />
+            <InfoRow label="Home Phone" value={v.home_phone} />
+            <InfoRow label="Self-service access" value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"} />
           </div>
           <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline">
             Edit
@@ -418,14 +422,14 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
   return (
     <FormSection title="Job">
       {!editing ? (
-        <div className="flex items-start justify-between">
-          <div className="grid grid-cols-3 gap-4 text-sm text-slate-700 sm:grid-cols-4">
-            <Vital label="Hire Date" value={job.hire_date ? new Date(job.hire_date).toLocaleDateString() : undefined} />
-            <Vital label="Job Code" value={job.job_code} />
-            <Vital label="Direct Reports" value={String(job.direct_reports_count)} />
-            <Vital label="Probation End" value={job.probation_end_date ? new Date(job.probation_end_date).toLocaleDateString() : undefined} />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+            <InfoRow label="Hire Date" value={job.hire_date ? new Date(job.hire_date).toLocaleDateString() : undefined} />
+            <InfoRow label="Job Code" value={job.job_code} />
+            <InfoRow label="Direct Reports" value={String(job.direct_reports_count)} />
+            <InfoRow label="Probation End" value={job.probation_end_date ? new Date(job.probation_end_date).toLocaleDateString() : undefined} />
           </div>
-          <button type="button" onClick={() => setEditing(true)} className="text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline">
             Edit
           </button>
         </div>
@@ -484,8 +488,10 @@ function EmploymentStatusSection({ employeeId, current }: { employeeId: string; 
 
   return (
     <FormSection title="Employment Status">
-      <div className="flex items-start justify-between">
-        <Vital label="Current Status" value={current?.employment_status} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <InfoRow label="Current Status" value={current?.employment_status} />
+        </div>
         {!adding && (
           <button type="button" onClick={() => setAdding(true)} className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
             <PlusIcon className="size-3.5" /> Add entry
@@ -556,12 +562,12 @@ function JobInformationSection({
 
   return (
     <FormSection title="Job Information">
-      <div className="flex items-start justify-between">
-        <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-          <Vital label="Job Title" value={current?.job_title} />
-          <Vital label="Department" value={current?.department} />
-          <Vital label="Division" value={current?.division} />
-          <Vital label="Location" value={current?.location} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+          <InfoRow label="Job Title" value={current?.job_title} />
+          <InfoRow label="Department" value={current?.department} />
+          <InfoRow label="Division" value={current?.division} />
+          <InfoRow label="Location" value={current?.location} />
         </div>
         {!adding && (
           <button type="button" onClick={() => setAdding(true)} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
@@ -626,11 +632,11 @@ function CompensationSection({ employeeId, current }: { employeeId: string; curr
 
   return (
     <FormSection title="Compensation">
-      <div className="flex items-start justify-between">
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <Vital label="Pay Type" value={current?.pay_type} />
-          <Vital label="Rate" value={current ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}` : undefined} />
-          <Vital label="Schedule" value={current?.pay_schedule} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+          <InfoRow label="Pay Type" value={current?.pay_type} />
+          <InfoRow label="Rate" value={current ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}` : undefined} />
+          <InfoRow label="Schedule" value={current?.pay_schedule} />
         </div>
         {!adding && (
           <button type="button" onClick={() => setAdding(true)} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
