@@ -150,8 +150,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
     <div className="mx-auto max-w-6xl font-['Inter']">
       <LedgerFonts />
       <Topbar />
-      <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
-        {(overdueCount > 0 || soonCount > 0) && (
+      {(overdueCount > 0 || soonCount > 0) && (
   <div className="mx-8 mb-4 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
     {overdueCount > 0 && (
       <div className="flex items-center gap-2">
@@ -171,6 +170,8 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
     )}
   </div>
 )}
+      <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
+        
         <motion.div
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
