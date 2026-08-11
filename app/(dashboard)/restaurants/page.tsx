@@ -50,7 +50,7 @@ export default function RestaurantsPage() {
     <>
       
 
-      <div className="px-8 py-6">
+      <div className="mx-auto max-w-6xl">
         <Topbar
         title="Restaurants"
         subtitle={
