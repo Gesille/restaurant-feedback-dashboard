@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useRef, useState } from "react";
@@ -75,7 +76,11 @@ function addMonthsToDateStr(dateStr: string, months: number) {
 // Employment statuses that indicate a fixed-term arrangement — only these
 // need a Contract End Date. Probation is a separate, always-applicable concept.
 const CONTRACT_TYPE_RE = /contract|seasonal|temporary/i;
-
+function isContractEndingSoon(dateStr?: string, withinDays = 30) {
+  if (!dateStr) return false;
+  const diffDays = (new Date(dateStr).getTime() - Date.now()) / 86_400_000;
+  return diffDays <= withinDays;
+}
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-[#EAF7EE] text-[#1E8A4C]",
   "On Leave": "bg-[#FFF4E5] text-[#B4740E]",
@@ -191,7 +196,12 @@ export function EmployeeProfileView({
               probationEndDate={profile.job_tab.job.probation_end_date}
             />
           )}
-
+{isContractEndingSoon(profile.job_tab.job.contract_end_date) && (
+            <ContractEndBanner
+              endDate={profile.job_tab.job.contract_end_date}
+              onReview={() => selectTab("job")}
+            />
+          )}
           {/* Section heading — orients the user; the count shows progress
               through the sections without needing the nav visible. */}
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -597,6 +607,39 @@ function ProbationBanner({
           Passed — move to Full-time
         </button>
       </div>
+    </div>
+  );
+}
+function ContractEndBanner({
+  endDate,
+  onReview,
+}: {
+  endDate?: string;
+  onReview: () => void;
+}) {
+  const isPast = endDate ? new Date(endDate).getTime() < Date.now() : false;
+  const tone = isPast
+    ? { border: "border-red-200", bg: "bg-red-50", title: "text-red-900", body: "text-red-700" }
+    : { border: "border-amber-200", bg: "bg-amber-50", title: "text-amber-900", body: "text-amber-700" };
+
+  return (
+    <div className={`mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border ${tone.border} ${tone.bg} px-5 py-4`}>
+      <div>
+        <p className={`font-['Fraunces'] italic ${tone.title}`}>
+          {isPast ? "Contract ended" : "Contract ending"}{" "}
+          {endDate ? new Date(endDate).toLocaleDateString() : ""}
+        </p>
+        <p className={`mt-0.5 text-xs ${tone.body}`}>
+          Review this employee&apos;s job details to renew, extend, or update their contract.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onReview}
+        className="shrink-0 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+      >
+        Review Job Details
+      </button>
     </div>
   );
 }

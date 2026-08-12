@@ -303,6 +303,11 @@ resolveProbation: builder.mutation<
     { type: "Employee", id: "PROBATION_PENDING" },
   ],
 }),
+getContractsNearingEnd: builder.query<EmployeeSummary[], void>({
+  query: () => `/employees/contracts/near-end`,
+  transformResponse: (response: ApiResponse<EmployeeSummary[]>) => response.data,
+  providesTags: [{ type: "Employee", id: "CONTRACTS_NEAR_END" }],
+}),
     updatePotentialBonus: builder.mutation<
       EmployeeProfile,
       { id: string; annual_percentage?: number; annual_amount?: number; annual_amount_currency?: string }
@@ -339,4 +344,5 @@ export const {
     useUpdateEmployeeBasicInfoMutation,
     useGetPendingProbationReviewsQuery,
     useResolveProbationMutation,
+    useGetContractsNearingEndQuery,
 } = employeeApi;

@@ -10,6 +10,7 @@ import { EmployeeStats } from "@/components/employees/EmployeeStats";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { DeleteConfirmModal } from "@/components/employees/DeleteConfirmModal";
 import { EmployeeSummary } from "@/types";
+import { ContractsNearingEndPanel } from "@/components/employees/ContractsNearingEndPanel";
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function EmployeesPage() {
       </div>
 
       <EmployeeStats employees={employees} />
+<ContractsNearingEndPanel onOpen={(emp) => router.push(`/employees/${emp.id}`)} />
 
       <div className="mt-8 px-8">
         <div className="relative max-w-sm">
