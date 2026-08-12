@@ -32,7 +32,7 @@ export default function ReportsPickerPage() {
         </motion.div>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 pb-10 sm:flex-row">
+      <div className="flex flex-col gap-6 px-8 pb-10 sm:flex-row">
         <RestaurantSidebar />
         <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-20 text-center">
           <FileBarChart className="mb-3 size-8 text-fuchsia-300" />
