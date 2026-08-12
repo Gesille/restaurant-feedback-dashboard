@@ -7,6 +7,7 @@ import { LayoutGrid, UtensilsCrossed, QrCode, BarChart3, Search as SearchIcon } 
 
 import { useSearch } from "@/lib/search-context";
 import { restaurantsData } from "@/data/restaurants";
+import { useGetAllRestaurantsQuery } from "@/redux/restaurants/restaurantApi";
 
 const staticPages = [
   { label: "Dashboard", href: "/", icon: LayoutGrid },
@@ -21,7 +22,8 @@ export function CommandPalette() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-
+ const { data: restaurantsRes } = useGetAllRestaurantsQuery();
+  const restaurants = restaurantsRes?.data ?? [];
   // ⌘K / Ctrl+K opens the palette from anywhere
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -48,17 +50,18 @@ export function CommandPalette() {
   }, [query]);
 
   const matchedRestaurants = useMemo(() => {
-    if (!query.trim()) return restaurantsData.slice(0, 5);
-    return restaurantsData.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()));
-  }, [query]);
+    if (!query.trim()) return restaurants.slice(0, 5);
+    return restaurants.filter((r) =>
+      r.x_name.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [query, restaurants]);
 
-  const results = [
+ const results = [
     ...matchedPages.map((p) => ({ type: "page" as const, href: p.href, label: p.label, icon: p.icon })),
     ...matchedRestaurants.map((r) => ({
       type: "restaurant" as const,
       href: `/restaurants/${r.id}`,
-      label: r.name,
-     
+      label: r.x_name,
     })),
   ];
 
