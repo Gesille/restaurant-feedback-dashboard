@@ -79,10 +79,10 @@ export default function ContactSubmissionsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl font-['Inter']">
+      <div className="font-['Inter']">
       <LedgerFonts />
       <Topbar />
-      <div className="px-6 py-9">
+      <div className="px-8 py-6">
         <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
           <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-fuchsia-600">
             [ Inbox ]
@@ -95,8 +95,7 @@ export default function ContactSubmissionsPage() {
           </p>
         </motion.div>
       </div>
-
-      <div className="px-6 pb-10">
+      <div className="px-8 pb-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard label="Total messages" value={counts.total} icon={MailIcon} />
           <StatCard
@@ -107,8 +106,7 @@ export default function ContactSubmissionsPage() {
           <StatCard label="Page" value={`${pagination?.page ?? 1} / ${pagination?.totalPages ?? 1}`} icon={ClockIcon} />
           <StatCard label="Filter" value={STATUS_TABS.find((t) => t.key === statusFilter)?.label ?? "All"} icon={CircleIcon} />
         </div>
-
-        {/* Status tabs */}
+     {/* Status tabs */}
         <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-fuchsia-100 bg-white/70 p-2 shadow-sm backdrop-blur-xl">
           {STATUS_TABS.map((tab) => {
             const isActive = statusFilter === tab.key;
@@ -127,7 +125,6 @@ export default function ContactSubmissionsPage() {
               </button>
             );
           })}
-
           {isFetching && (
             <span className="ml-auto flex items-center gap-1.5 pr-2 text-xs text-slate-400">
               <Loader2Icon className="size-3.5 animate-spin" />
@@ -137,7 +134,7 @@ export default function ContactSubmissionsPage() {
         </div>
 
         {/* List */}
-        <div className="mt-6 overflow-hidden rounded-2xl border border-fuchsia-100 bg-white/70 shadow-sm backdrop-blur-xl">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-fuchsia-100 bg-white/70 shadow-sm backdrop-blur-xl">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-slate-400">
               <Loader2Icon className="size-4 animate-spin" />
@@ -152,7 +149,7 @@ export default function ContactSubmissionsPage() {
           ) : (
             <div className="divide-y divide-fuchsia-50">
               <AnimatePresence initial={false}>
-                {submissions.map((s:any) => (
+                {submissions.map((s: any) => (
                   <SubmissionRow
                     key={s._id}
                     submission={s}
@@ -165,7 +162,7 @@ export default function ContactSubmissionsPage() {
         </div>
 
         {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
+   {pagination && pagination.totalPages > 1 && (
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               type="button"

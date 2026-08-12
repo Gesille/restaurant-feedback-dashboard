@@ -1,23 +1,14 @@
-
-import QRGeneratorPanel from "@/components/dashboard/restaurants/QRGeneratorPanel";
+import AdminCvDashboard from "@/components/cv/cvSubmission";
 import { Topbar } from "@/components/layout/Topbar";
 
-export default async function QrGeneratorPage({
-
-}: {
+export default async function QrGeneratorPage({}: {
   searchParams: Promise<{ restaurant?: string }>;
 }) {
-
-
   return (
     <>
-
-      <div className="mx-auto max-w-6xl">
-             <Topbar 
-  title="Restaurant Analytics"
-  subtitle="Performance insights and customer feedback for this restaurant"
-/>
-        <QRGeneratorPanel />
+      <Topbar title="QR Generator" subtitle="Create a branded, trackable QR code in seconds" />
+      <div className="px-8 py-6">
+        <AdminCvDashboard />
       </div>
     </>
   );
