@@ -13,6 +13,12 @@ import {
   BadgeDollarSignIcon,
   MapPinIcon,
   HashIcon,
+  WalletIcon,
+  GiftIcon,
+  TrendingUpIcon,
+  PieChartIcon,
+  ShieldIcon,
+  PercentIcon,
 } from "lucide-react";
 import { EmployeeProfile, EmployeeSummary } from "@/types";
 import {
@@ -21,6 +27,13 @@ import {
   useAddEmploymentStatusEntryMutation,
   useAddJobInformationEntryMutation,
   useAddCompensationEntryMutation,
+  useAddAllowanceEntryMutation,
+  useAddAirportSecurityPassEntryMutation,
+  useAddBonusEntryMutation,
+  useAddCommissionEntryMutation,
+  useAddEquityEntryMutation,
+  useUpdatePayRatesMutation,
+  useUpdatePotentialBonusMutation,
   useResolveProbationMutation,
 } from "@/redux/Employee/Employeeapi";
 import {
@@ -41,6 +54,9 @@ function currentStatus(profile: EmployeeProfile) {
 function currentCompensation(profile: EmployeeProfile) {
   return profile.job_tab.compensation.current;
 }
+function currentAllowances(profile: EmployeeProfile) {
+  return profile.job_tab.allowances.current;
+}
 
 function initials(name?: string) {
   if (!name) return "?";
@@ -55,6 +71,10 @@ function addMonthsToDateStr(dateStr: string, months: number) {
   d.setMonth(d.getMonth() + months);
   return d.toISOString().slice(0, 10);
 }
+// Employment statuses that indicate a fixed-term arrangement — only these
+// need a Contract End Date. Probation is a separate, always-applicable concept.
+const CONTRACT_TYPE_RE = /contract|seasonal|temporary/i;
+
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-[#EAF7EE] text-[#1E8A4C]",
   "On Leave": "bg-[#FFF4E5] text-[#B4740E]",
@@ -62,7 +82,18 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 // ── Tabs config ─────────────────────────────────────────────────────────
-type TabKey = "personal" | "job" | "status" | "jobinfo" | "compensation";
+type TabKey =
+  | "personal"
+  | "job"
+  | "status"
+  | "jobinfo"
+  | "compensation"
+  | "allowances"
+  | "payrates"
+  | "bonus"
+  | "commission"
+  | "equity"
+  | "airportpass";
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "personal", label: "Personal & Contact", icon: UserIcon },
@@ -70,6 +101,12 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "status", label: "Employment Status", icon: ClipboardListIcon },
   { key: "jobinfo", label: "Job Information", icon: MapPinIcon },
   { key: "compensation", label: "Compensation", icon: BadgeDollarSignIcon },
+  { key: "allowances", label: "Allowances", icon: WalletIcon },
+  { key: "payrates", label: "Pay Rates & Bonus", icon: PercentIcon },
+  { key: "bonus", label: "Bonus", icon: GiftIcon },
+  { key: "commission", label: "Commission", icon: TrendingUpIcon },
+  { key: "equity", label: "Equity", icon: PieChartIcon },
+  { key: "airportpass", label: "Airport Security Pass", icon: ShieldIcon },
 ];
 
 export function EmployeeProfileView({
@@ -84,6 +121,7 @@ export function EmployeeProfileView({
   const jobInfo = currentJobInfo(profile);
   const status = currentStatus(profile);
   const comp = currentCompensation(profile);
+  const allowances = currentAllowances(profile);
 
   return (
     <div className="min-h-screen w-full bg-[#FBFAFF]">
@@ -210,6 +248,7 @@ export function EmployeeProfileView({
               <JobCoreSection
                 employeeId={profile.id}
                 job={profile.job_tab.job}
+                employmentStatus={status?.employment_status}
               />
             )}
             {activeTab === "status" && (
@@ -228,6 +267,40 @@ export function EmployeeProfileView({
             )}
             {activeTab === "compensation" && (
               <CompensationSection employeeId={profile.id} current={comp} />
+            )}
+            {activeTab === "allowances" && (
+              <AllowancesSection employeeId={profile.id} current={allowances} />
+            )}
+            {activeTab === "payrates" && (
+              <PayRatesSection
+                employeeId={profile.id}
+                payRates={profile.job_tab.pay_rates}
+                potentialBonus={profile.job_tab.potential_bonus}
+              />
+            )}
+            {activeTab === "bonus" && (
+              <BonusSection
+                employeeId={profile.id}
+                history={profile.job_tab.bonus_history}
+              />
+            )}
+            {activeTab === "commission" && (
+              <CommissionSection
+                employeeId={profile.id}
+                history={profile.job_tab.commission_history}
+              />
+            )}
+            {activeTab === "equity" && (
+              <EquitySection
+                employeeId={profile.id}
+                history={profile.job_tab.equity_history}
+              />
+            )}
+            {activeTab === "airportpass" && (
+              <AirportPassSection
+                employeeId={profile.id}
+                history={profile.job_tab.airport_security_pass_history}
+              />
             )}
           </div>
         </div>
@@ -701,7 +774,19 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
 }
 
 // ── Job core — Hire Date / Job Code / Probation / Contract / Hours / Days ─
-function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
+// NOTE: Contract End Date only applies to fixed-term employees (Contract /
+// Temporary / Seasonal). Probation End Date is a separate concept that
+// applies to every new hire and is unrelated to Contract End Date — do not
+// derive one from the other.
+function JobCoreSection({
+  employeeId,
+  job,
+  employmentStatus,
+}: {
+  employeeId: string;
+  job: any;
+  employmentStatus?: string;
+}) {
   const [editing, setEditing] = useState(false);
   const [probationTouched, setProbationTouched] = useState(false);
   const [form, setForm] = useState({
@@ -719,6 +804,11 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
     contracted_days_per_week: job.contracted_days_per_week ?? "",
   });
   const [save, { isLoading }] = useUpdateEmployeeJobCoreMutation();
+
+  const isContractType = employmentStatus
+    ? CONTRACT_TYPE_RE.test(employmentStatus)
+    : false;
+  const showContractEnd = isContractType || Boolean(form.contract_end_date);
 
   const handleSave = async () => {
     await save({
@@ -765,14 +855,16 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
                   : undefined
               }
             />
-            <InfoRow
-              label="Contract End"
-              value={
-                job.contract_end_date
-                  ? new Date(job.contract_end_date).toLocaleDateString()
-                  : undefined
-              }
-            />
+            {showContractEnd && (
+              <InfoRow
+                label="Contract End"
+                value={
+                  job.contract_end_date
+                    ? new Date(job.contract_end_date).toLocaleDateString()
+                    : undefined
+                }
+              />
+            )}
           </div>
           <button
             type="button"
@@ -828,16 +920,28 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
                 Auto-filled 4 months from hire date — edit if needed.
               </p>
             </FormField>
-            <FormField label="Contract End">
-              <input
-                type="date"
-                value={form.contract_end_date}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, contract_end_date: e.target.value }))
-                }
-                className={inputCls}
-              />
-            </FormField>
+            {showContractEnd ? (
+              <FormField label="Contract End">
+                <input
+                  type="date"
+                  value={form.contract_end_date}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, contract_end_date: e.target.value }))
+                  }
+                  className={inputCls}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Fixed-term contract expiry — independent of probation.
+                </p>
+              </FormField>
+            ) : (
+              <div className="flex items-end">
+                <p className="text-[11px] text-slate-400">
+                  Contract End Date only applies to Contract / Temporary /
+                  Seasonal employees. Change Employment Status to set one.
+                </p>
+              </div>
+            )}
             <FormField label="Contracted Hours/Week">
               <input
                 type="number"
@@ -1285,6 +1389,677 @@ function CompensationSection({
               {isLoading && <Loader2Icon className="size-3 animate-spin" />}
               Save
             </button>
+          </div>
+        </div>
+      )}
+    </FormSection>
+  );
+}
+
+// ── Allowances — effective-dated, add new entry ────────────────────────────
+function AllowancesSection({
+  employeeId,
+  current,
+}: {
+  employeeId: string;
+  current?: any;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [effectiveDate, setEffectiveDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [form, setForm] = useState({
+    phone: "",
+    travel: "",
+    housing: "",
+    electricity: "",
+    acting: "",
+    additional_duties: "",
+    shift_leader: "",
+    call_out: "",
+    other: "",
+    currency: "XCD",
+  });
+  const [addEntry, { isLoading }] = useAddAllowanceEntryMutation();
+
+  const set =
+    (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleAdd = async () => {
+    await addEntry({
+      id: employeeId,
+      effective_date: effectiveDate,
+      phone: form.phone === "" ? undefined : Number(form.phone),
+      travel: form.travel === "" ? undefined : Number(form.travel),
+      housing: form.housing === "" ? undefined : Number(form.housing),
+      electricity:
+        form.electricity === "" ? undefined : Number(form.electricity),
+      acting: form.acting === "" ? undefined : Number(form.acting),
+      additional_duties:
+        form.additional_duties === ""
+          ? undefined
+          : Number(form.additional_duties),
+      shift_leader:
+        form.shift_leader === "" ? undefined : Number(form.shift_leader),
+      call_out: form.call_out === "" ? undefined : Number(form.call_out),
+      other: form.other === "" ? undefined : Number(form.other),
+      currency: form.currency,
+    }).unwrap();
+    setAdding(false);
+  };
+
+  const rows: [string, number | undefined][] = [
+    ["Phone", current?.phone],
+    ["Travel", current?.travel],
+    ["Housing", current?.housing],
+    ["Electricity", current?.electricity],
+    ["Acting", current?.acting],
+    ["Additional Duties", current?.additional_duties],
+    ["Shift Leader", current?.shift_leader],
+    ["Call Out", current?.call_out],
+    ["Other", current?.other],
+  ];
+
+  return (
+    <FormSection title="Allowances">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+          {rows.map(([label, value]) => (
+            <InfoRow
+              key={label}
+              label={label}
+              value={
+                value !== undefined
+                  ? `${value} ${current?.currency || ""}`.trim()
+                  : undefined
+              }
+            />
+          ))}
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
+            <PlusIcon className="size-3.5" /> Add entry
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Effective Date">
+              <input
+                type="date"
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Currency">
+              <input value={form.currency} onChange={set("currency")} className={inputCls} />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <FormField label="Phone"><input type="number" value={form.phone} onChange={set("phone")} className={inputCls} /></FormField>
+            <FormField label="Travel"><input type="number" value={form.travel} onChange={set("travel")} className={inputCls} /></FormField>
+            <FormField label="Housing"><input type="number" value={form.housing} onChange={set("housing")} className={inputCls} /></FormField>
+            <FormField label="Electricity"><input type="number" value={form.electricity} onChange={set("electricity")} className={inputCls} /></FormField>
+            <FormField label="Acting"><input type="number" value={form.acting} onChange={set("acting")} className={inputCls} /></FormField>
+            <FormField label="Additional Duties"><input type="number" value={form.additional_duties} onChange={set("additional_duties")} className={inputCls} /></FormField>
+            <FormField label="Shift Leader"><input type="number" value={form.shift_leader} onChange={set("shift_leader")} className={inputCls} /></FormField>
+            <FormField label="Call Out"><input type="number" value={form.call_out} onChange={set("call_out")} className={inputCls} /></FormField>
+            <FormField label="Other"><input type="number" value={form.other} onChange={set("other")} className={inputCls} /></FormField>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+              Cancel
+            </button>
+            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+    </FormSection>
+  );
+}
+
+// ── Pay Rates & Potential Bonus — single-value panels ──────────────────────
+function PayRatesSection({
+  employeeId,
+  payRates,
+  potentialBonus,
+}: {
+  employeeId: string;
+  payRates?: any;
+  potentialBonus?: any;
+}) {
+  const [editingRates, setEditingRates] = useState(false);
+  const [ratesForm, setRatesForm] = useState({
+    daily: payRates?.daily ?? "",
+    holiday: payRates?.holiday ?? "",
+    sick: payRates?.sick ?? "",
+    vacation_pay_in_lieu_rate: payRates?.vacation_pay_in_lieu_rate ?? "",
+  });
+  const [saveRates, { isLoading: savingRates }] = useUpdatePayRatesMutation();
+
+  const [editingBonus, setEditingBonus] = useState(false);
+  const [bonusForm, setBonusForm] = useState({
+    annual_percentage: potentialBonus?.annual_percentage ?? "",
+    annual_amount: potentialBonus?.annual_amount ?? "",
+    annual_amount_currency: potentialBonus?.annual_amount_currency || "XCD",
+  });
+  const [saveBonus, { isLoading: savingBonus }] =
+    useUpdatePotentialBonusMutation();
+
+  const setRate =
+    (key: keyof typeof ratesForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+      setRatesForm((f) => ({ ...f, [key]: e.target.value }));
+  const setBonusField =
+    (key: keyof typeof bonusForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+      setBonusForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSaveRates = async () => {
+    await saveRates({
+      id: employeeId,
+      daily: ratesForm.daily === "" ? undefined : Number(ratesForm.daily),
+      holiday: ratesForm.holiday === "" ? undefined : Number(ratesForm.holiday),
+      sick: ratesForm.sick === "" ? undefined : Number(ratesForm.sick),
+      vacation_pay_in_lieu_rate:
+        ratesForm.vacation_pay_in_lieu_rate === ""
+          ? undefined
+          : Number(ratesForm.vacation_pay_in_lieu_rate),
+    }).unwrap();
+    setEditingRates(false);
+  };
+
+  const handleSaveBonus = async () => {
+    await saveBonus({
+      id: employeeId,
+      annual_percentage:
+        bonusForm.annual_percentage === ""
+          ? undefined
+          : Number(bonusForm.annual_percentage),
+      annual_amount:
+        bonusForm.annual_amount === "" ? undefined : Number(bonusForm.annual_amount),
+      annual_amount_currency: bonusForm.annual_amount_currency,
+    }).unwrap();
+    setEditingBonus(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <FormSection title="Pay Rates">
+        {!editingRates ? (
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+              <InfoRow label="Daily" value={payRates?.daily !== undefined ? String(payRates.daily) : undefined} />
+              <InfoRow label="Holiday" value={payRates?.holiday !== undefined ? String(payRates.holiday) : undefined} />
+              <InfoRow label="Sick" value={payRates?.sick !== undefined ? String(payRates.sick) : undefined} />
+              <InfoRow
+                label="Vacation Pay in Lieu"
+                value={
+                  payRates?.vacation_pay_in_lieu_rate !== undefined
+                    ? String(payRates.vacation_pay_in_lieu_rate)
+                    : undefined
+                }
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditingRates(true)}
+              className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            >
+              Edit
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Daily"><input type="number" value={ratesForm.daily} onChange={setRate("daily")} className={inputCls} /></FormField>
+              <FormField label="Holiday"><input type="number" value={ratesForm.holiday} onChange={setRate("holiday")} className={inputCls} /></FormField>
+              <FormField label="Sick"><input type="number" value={ratesForm.sick} onChange={setRate("sick")} className={inputCls} /></FormField>
+              <FormField label="Vacation Pay in Lieu"><input type="number" value={ratesForm.vacation_pay_in_lieu_rate} onChange={setRate("vacation_pay_in_lieu_rate")} className={inputCls} /></FormField>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setEditingRates(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+                Cancel
+              </button>
+              <button type="button" onClick={handleSaveRates} disabled={savingRates} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+                {savingRates && <Loader2Icon className="size-3 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        )}
+      </FormSection>
+
+      <FormSection title="Potential Bonus">
+        {!editingBonus ? (
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+              <InfoRow
+                label="Annual %"
+                value={
+                  potentialBonus?.annual_percentage !== undefined
+                    ? `${potentialBonus.annual_percentage}%`
+                    : undefined
+                }
+              />
+              <InfoRow
+                label="Annual Amount"
+                value={
+                  potentialBonus?.annual_amount !== undefined
+                    ? `${potentialBonus.annual_amount} ${potentialBonus.annual_amount_currency || ""}`.trim()
+                    : undefined
+                }
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditingBonus(true)}
+              className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            >
+              Edit
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <FormField label="Annual %"><input type="number" value={bonusForm.annual_percentage} onChange={setBonusField("annual_percentage")} className={inputCls} /></FormField>
+              <FormField label="Annual Amount"><input type="number" value={bonusForm.annual_amount} onChange={setBonusField("annual_amount")} className={inputCls} /></FormField>
+              <FormField label="Currency"><input value={bonusForm.annual_amount_currency} onChange={setBonusField("annual_amount_currency")} className={inputCls} /></FormField>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setEditingBonus(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+                Cancel
+              </button>
+              <button type="button" onClick={handleSaveBonus} disabled={savingBonus} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+                {savingBonus && <Loader2Icon className="size-3 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        )}
+      </FormSection>
+    </div>
+  );
+}
+
+// ── Bonus — flat list, add new entry ────────────────────────────────────────
+function BonusSection({
+  employeeId,
+  history,
+}: {
+  employeeId: string;
+  history: any[];
+}) {
+  const [adding, setAdding] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [comment, setComment] = useState("");
+  const [addEntry, { isLoading }] = useAddBonusEntryMutation();
+
+  const handleAdd = async () => {
+    if (amount === "") return;
+    await addEntry({
+      id: employeeId,
+      date,
+      amount: Number(amount),
+      reason: reason || undefined,
+      comment: comment || undefined,
+    }).unwrap();
+    setAdding(false);
+    setAmount("");
+    setReason("");
+    setComment("");
+  };
+
+  return (
+    <FormSection title="Bonus">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          {history.length === 0 ? (
+            <p className="text-sm text-slate-400">No bonus entries yet.</p>
+          ) : (
+            <div className="divide-y divide-[#EDEBF7]">
+              {history.map((b: any, i: number) => (
+                <InfoRow
+                  key={b._id || i}
+                  label={new Date(b.date).toLocaleDateString()}
+                  value={`${b.amount}${b.reason ? ` — ${b.reason}` : ""}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
+            <PlusIcon className="size-3.5" /> Add entry
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Date"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} /></FormField>
+            <FormField label="Amount"><input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></FormField>
+          </div>
+          <FormField label="Reason"><input value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} /></FormField>
+          <FormField label="Comment"><input value={comment} onChange={(e) => setComment(e.target.value)} className={inputCls} /></FormField>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+              Cancel
+            </button>
+            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+    </FormSection>
+  );
+}
+
+// ── Commission — flat list, add new entry ───────────────────────────────────
+function CommissionSection({
+  employeeId,
+  history,
+}: {
+  employeeId: string;
+  history: any[];
+}) {
+  const [adding, setAdding] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [amount, setAmount] = useState("");
+  const [comment, setComment] = useState("");
+  const [addEntry, { isLoading }] = useAddCommissionEntryMutation();
+
+  const handleAdd = async () => {
+    if (amount === "") return;
+    await addEntry({
+      id: employeeId,
+      date,
+      amount: Number(amount),
+      comment: comment || undefined,
+    }).unwrap();
+    setAdding(false);
+    setAmount("");
+    setComment("");
+  };
+
+  return (
+    <FormSection title="Commission">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          {history.length === 0 ? (
+            <p className="text-sm text-slate-400">No commission entries yet.</p>
+          ) : (
+            <div className="divide-y divide-[#EDEBF7]">
+              {history.map((c: any, i: number) => (
+                <InfoRow
+                  key={c._id || i}
+                  label={new Date(c.date).toLocaleDateString()}
+                  value={String(c.amount)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
+            <PlusIcon className="size-3.5" /> Add entry
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Date"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} /></FormField>
+            <FormField label="Amount"><input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></FormField>
+          </div>
+          <FormField label="Comment"><input value={comment} onChange={(e) => setComment(e.target.value)} className={inputCls} /></FormField>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+              Cancel
+            </button>
+            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+    </FormSection>
+  );
+}
+
+// ── Equity — flat list, add new entry ───────────────────────────────────────
+const EQUITY_GRANT_TYPES = ["ISO", "NSO", "RSU", "Options", "Other"];
+
+function EquitySection({
+  employeeId,
+  history,
+}: {
+  employeeId: string;
+  history: any[];
+}) {
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({
+    grant_type: "",
+    custom_grant_type_name: "",
+    grant_date: new Date().toISOString().slice(0, 10),
+    vesting_start_date: "",
+    equity_granted: "",
+    strike_price: "",
+    vesting_schedule: "",
+    vesting_months: "",
+    cliff_months: "",
+  });
+  const [addEntry, { isLoading }] = useAddEquityEntryMutation();
+
+  const set =
+    (key: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleAdd = async () => {
+    if (!form.grant_type || !form.grant_date || form.equity_granted === "")
+      return;
+    await addEntry({
+      id: employeeId,
+      grant_type: form.grant_type,
+      custom_grant_type_name: form.custom_grant_type_name || undefined,
+      grant_date: form.grant_date,
+      vesting_start_date: form.vesting_start_date || undefined,
+      equity_granted: Number(form.equity_granted),
+      strike_price: form.strike_price === "" ? undefined : Number(form.strike_price),
+      vesting_schedule: form.vesting_schedule || undefined,
+      vesting_months:
+        form.vesting_months === "" ? undefined : Number(form.vesting_months),
+      cliff_months:
+        form.cliff_months === "" ? undefined : Number(form.cliff_months),
+    }).unwrap();
+    setAdding(false);
+  };
+
+  return (
+    <FormSection title="Equity">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          {history.length === 0 ? (
+            <p className="text-sm text-slate-400">No equity grants yet.</p>
+          ) : (
+            <div className="divide-y divide-[#EDEBF7]">
+              {history.map((eq: any, i: number) => (
+                <InfoRow
+                  key={eq._id || i}
+                  label={`${eq.grant_type}${
+                    eq.grant_type === "Other" && eq.custom_grant_type_name
+                      ? ` (${eq.custom_grant_type_name})`
+                      : ""
+                  } — ${new Date(eq.grant_date).toLocaleDateString()}`}
+                  value={`${eq.equity_granted} units${
+                    eq.strike_price ? ` @ ${eq.strike_price} strike` : ""
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
+            <PlusIcon className="size-3.5" /> Add entry
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Grant Type">
+              <select value={form.grant_type} onChange={set("grant_type")} className={inputCls}>
+                <option value="">– Select –</option>
+                {EQUITY_GRANT_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </FormField>
+            {form.grant_type === "Other" && (
+              <FormField label="Custom Grant Type">
+                <input value={form.custom_grant_type_name} onChange={set("custom_grant_type_name")} className={inputCls} />
+              </FormField>
+            )}
+            <FormField label="Grant Date"><input type="date" value={form.grant_date} onChange={set("grant_date")} className={inputCls} /></FormField>
+            <FormField label="Vesting Start Date"><input type="date" value={form.vesting_start_date} onChange={set("vesting_start_date")} className={inputCls} /></FormField>
+            <FormField label="Equity Granted"><input type="number" value={form.equity_granted} onChange={set("equity_granted")} className={inputCls} /></FormField>
+            <FormField label="Strike Price"><input type="number" value={form.strike_price} onChange={set("strike_price")} className={inputCls} /></FormField>
+            <FormField label="Vesting Schedule"><input value={form.vesting_schedule} onChange={set("vesting_schedule")} placeholder="e.g. 4yr / 1yr cliff" className={inputCls} /></FormField>
+            <FormField label="Vesting Months"><input type="number" value={form.vesting_months} onChange={set("vesting_months")} className={inputCls} /></FormField>
+            <FormField label="Cliff Months"><input type="number" value={form.cliff_months} onChange={set("cliff_months")} className={inputCls} /></FormField>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+              Cancel
+            </button>
+            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+    </FormSection>
+  );
+}
+
+// ── Airport Security Pass — most recent + history, add new entry ───────────
+function AirportPassSection({
+  employeeId,
+  history,
+}: {
+  employeeId: string;
+  history: any[];
+}) {
+  const [adding, setAdding] = useState(false);
+  const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [expirationDate, setExpirationDate] = useState("");
+  const [comments, setComments] = useState("");
+  const [addEntry, { isLoading }] = useAddAirportSecurityPassEntryMutation();
+
+  const handleAdd = async () => {
+    if (!issueDate || !expirationDate) return;
+    await addEntry({
+      id: employeeId,
+      issue_date: issueDate,
+      expiration_date: expirationDate,
+      comments: comments || undefined,
+    }).unwrap();
+    setAdding(false);
+    setComments("");
+  };
+
+  const mostRecent = history[0];
+  const isExpired = mostRecent
+    ? new Date(mostRecent.expiration_date) < new Date()
+    : false;
+
+  return (
+    <FormSection title="Airport Security Pass">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          {mostRecent ? (
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow label="Issue Date" value={new Date(mostRecent.issue_date).toLocaleDateString()} />
+              <InfoRow label="Expiration Date" value={new Date(mostRecent.expiration_date).toLocaleDateString()} />
+              <InfoRow label="Comments" value={mostRecent.comments} />
+              {isExpired && (
+                <p className="pt-3 text-xs font-semibold text-red-600">
+                  This pass has expired.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No airport security pass on file.</p>
+          )}
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
+            <PlusIcon className="size-3.5" /> Add entry
+          </button>
+        )}
+      </div>
+      {adding && (
+        <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Issue Date"><input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className={inputCls} /></FormField>
+            <FormField label="Expiration Date"><input type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} className={inputCls} /></FormField>
+          </div>
+          <FormField label="Comments"><input value={comments} onChange={(e) => setComments(e.target.value)} className={inputCls} /></FormField>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+              Cancel
+            </button>
+            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+      {history.length > 1 && (
+        <div className="mt-6 border-t border-[#EDEBF7] pt-4">
+          <p className="mb-2 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">
+            History
+          </p>
+          <div className="space-y-2">
+            {history.slice(1).map((h: any, i: number) => (
+              <div key={h._id || i} className="rounded-lg bg-[#FBFAFF] px-3 py-2 text-xs text-slate-600">
+                {new Date(h.issue_date).toLocaleDateString()} – {new Date(h.expiration_date).toLocaleDateString()}
+                {h.comments && <span className="text-slate-400"> · {h.comments}</span>}
+              </div>
+            ))}
           </div>
         </div>
       )}
