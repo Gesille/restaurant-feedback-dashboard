@@ -35,7 +35,6 @@ import { useGetAllQuestionsQuery } from "@/redux/questions/questionApi";
 const mainNav: { href: string; label: string; icon: any; color: BrandColor; badge?: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "violet" },
   { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed, color: "teal" },
-  { href: "/employees", label: "Employees", icon: IdCard, color: "amber" },
   { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber"},
   { href: "/analytics", label: "Analytics", icon: BarChart3, color: "pink" },
 ];
@@ -44,6 +43,7 @@ const workspaceNav: { href: string; label: string; icon: any; color: BrandColor 
   { href: "/CV", label: "New CV Submissions", icon: Users, color: "blue" },
   { href: "/reports", label: "Reports", icon: FileBarChart, color: "coral" },
   { href: "/jobs", label: "Add Jobs", icon: GitBranchPlus , color: "slate" },
+  { href: "/employees", label: "Employees", icon: IdCard, color: "amber" },
 ];
 const recruitmentNav: {
   href: string;
