@@ -19,6 +19,7 @@ import {
   PieChartIcon,
   ShieldIcon,
   PercentIcon,
+  ChevronDownIcon,
 } from "lucide-react";
 import { EmployeeProfile, EmployeeSummary } from "@/types";
 import {
@@ -123,6 +124,8 @@ export function EmployeeProfileView({
   const comp = currentCompensation(profile);
   const allowances = currentAllowances(profile);
 
+  const activeTabMeta = TABS.find((t) => t.key === activeTab);
+
   return (
     <div className="min-h-screen w-full bg-[#FBFAFF]">
       <div className="flex w-full gap-6 px-6 py-8 lg:px-10">
@@ -192,6 +195,29 @@ export function EmployeeProfileView({
               />
             </div>
           </div>
+
+          {/* Section navigation — vertical list, no horizontal scrolling */}
+          <nav className="mt-4 rounded-2xl border border-[#EDEBF7] bg-white p-2 shadow-sm">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition ${
+                    active
+                      ? "bg-[#6C4DF4] text-white shadow-sm"
+                      : "text-slate-600 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
+                  }`}
+                >
+                  <Icon className="size-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </aside>
 
         {/* ── Main column ─────────────────────────────────────────── */}
@@ -216,33 +242,45 @@ export function EmployeeProfileView({
               probationEndDate={profile.job_tab.job.probation_end_date}
             />
           )}
-          {/* Tab bar */}
-          <div className="overflow-x-auto rounded-2xl border border-[#EDEBF7] bg-white p-1.5 shadow-sm">
-            <nav className="flex min-w-max gap-1">
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                      active
-                        ? "bg-[#6C4DF4] text-white shadow-sm"
-                        : "text-slate-500 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
-                    }`}
-                  >
-                    <Icon className="size-3.5" />
+
+          {/* Mobile section selector — replaces the tab bar below lg, no scrolling */}
+          <div className="mb-6 lg:hidden">
+            <label
+              htmlFor="profile-section"
+              className="mb-1.5 block font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide text-slate-400"
+            >
+              Section
+            </label>
+            <div className="relative">
+              <select
+                id="profile-section"
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value as TabKey)}
+                className="w-full appearance-none rounded-2xl border border-[#EDEBF7] bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-[#6C4DF4] focus:ring-2 focus:ring-[#6C4DF4]/20"
+              >
+                {TABS.map((tab) => (
+                  <option key={tab.key} value={tab.key}>
                     {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            </div>
           </div>
 
+          {/* Desktop section heading — gives the content a clear title since
+              the tab bar no longer sits directly above it */}
+          {activeTabMeta && (
+            <div className="mb-4 hidden items-center gap-2 lg:flex">
+              <activeTabMeta.icon className="size-4 text-[#6C4DF4]" />
+              <h2 className="font-['Fraunces'] text-lg italic text-slate-900">
+                {activeTabMeta.label}
+              </h2>
+            </div>
+          )}
+
           {/* Tab content */}
-          <div className="mt-6">
+          <div>
             {activeTab === "personal" && <BasicInfoSection profile={profile} />}
             {activeTab === "job" && (
               <JobCoreSection
