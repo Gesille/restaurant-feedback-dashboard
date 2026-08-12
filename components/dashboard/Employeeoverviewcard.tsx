@@ -19,7 +19,7 @@ export function EmployeeOverviewCard() {
           <h3 className="text-sm font-semibold text-slate-900">Team overview</h3>
         </div>
         <Link
-          href="/employees/analytics"
+          href="/Employees-analytics"
           className="flex items-center gap-1 text-xs font-medium text-violet-600 hover:text-violet-700"
         >
           Full analytics <ArrowUpRight size={12} />
