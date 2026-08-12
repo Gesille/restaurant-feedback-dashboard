@@ -15,7 +15,7 @@ function LedgerFonts() {
 
 export default function ReportsPickerPage() {
   return (
-    <div className="mx-auto max-w-6xl font-['Inter']">
+    <div className="font-['Inter']">
       <LedgerFonts />
       <Topbar />
       <div className="px-6 py-8">
