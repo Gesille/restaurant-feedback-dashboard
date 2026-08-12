@@ -5,7 +5,6 @@
 import { Topbar } from "@/components/layout/Topbar";
 import { useGetOverviewQuery, useGetWaiterPerformanceQuery, useGetRatingDistributionQuery, useGetTrendQuery, useGetEvaluatorsQuery, useGetRestaurantLeaderboardQuery } from "@/redux/analytics/feedbackAnalyticsApi";
 
-
 import {
   ComposedChart,
   Area,
@@ -31,7 +30,6 @@ const BORDEAUX = "#8C2F3B";
 const SAGE = "#6B7A4F";
 
 export default function GlobalAnalyticsPage() {
-  // undefined restaurantId = global, same endpoints the per-restaurant page uses
   const { data: overviewRes, isLoading: loadingOverview } = useGetOverviewQuery(undefined);
   const { data: waiterRes } = useGetWaiterPerformanceQuery(undefined);
   const { data: distRes } = useGetRatingDistributionQuery(undefined);
@@ -42,17 +40,16 @@ export default function GlobalAnalyticsPage() {
   const overview = overviewRes?.data;
   const leaderboard = leaderboardRes?.data ?? [];
 
-  // The service returns one distribution entry per rating field; pull "overall_rating" for this chart
   const overallDist = distRes?.data?.find((d) => d.field === "overall_rating")?.distribution;
   const maxDistCount = overallDist ? Math.max(1, ...Object.values(overallDist)) : 1;
 
   return (
-
-    <div className="relative min-h-screen px-6 py-1 md:px-12" style={{ color: INK }}>
-        <Topbar />
+    <div className="relative min-h-screen" style={{ color: INK }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ backgroundColor: PAPER_BASE }} />
 
-      <div className="mx-8 max-w-5xl pt-6 ">
+      <Topbar />
+
+      <div className="px-8 py-6">
         <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.28em]" style={{ color: BRASS }}>
           Group Ledger
         </p>
@@ -183,8 +180,8 @@ export default function GlobalAnalyticsPage() {
                 )}
                 {leaderboard
                   .slice()
-                  .sort((a:any, b:any) => b.averageOverallRating - a.averageOverallRating)
-                  .map((r:any, i:any) => (
+                  .sort((a: any, b: any) => b.averageOverallRating - a.averageOverallRating)
+                  .map((r: any, i: any) => (
                     <div
                       key={r.restaurantId}
                       className="flex items-center gap-4 border-b px-4 py-3 last:border-b-0"
@@ -294,7 +291,7 @@ export default function GlobalAnalyticsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {evalRes.data.data.map((e:any) => (
+                      {evalRes.data.data.map((e: any) => (
                         <tr key={e.id} className="border-b last:border-b-0" style={{ borderColor: HAIRLINE }}>
                           <td className="px-4 py-3 font-display italic" style={{ color: INK }}>
                             {e.customer_name}
