@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo} from "react";
+import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Topbar } from "@/components/layout/Topbar";
 import { RestaurantCard } from "@/components/dashboard/restaurants/RestaurantCard";
@@ -8,7 +8,6 @@ import { useGetAllRestaurantsQuery } from "@/redux/restaurants/restaurantApi";
 import { brand, type BrandColor } from "@/lib/colors";
 import type { IRestaurant } from "@/types";
 import type { Restaurant } from "@/redux/restaurants/restaurantApi";
-
 
 const brandKeys = Object.keys(brand) as BrandColor[];
 
@@ -24,7 +23,7 @@ function toIRestaurant(r: Restaurant): IRestaurant {
     name: r.x_name,
     color: colorForId(r.id),
     status: "active",
-    
+
     avgRating: 0,
     totalScans: 0,
     scansTrend: 0,
@@ -48,10 +47,7 @@ export default function RestaurantsPage() {
 
   return (
     <>
-      
-
-      <div className="mx-auto max-w-6xl">
-        <Topbar
+      <Topbar
         title="Restaurants"
         subtitle={
           isLoading
@@ -59,8 +55,10 @@ export default function RestaurantsPage() {
             : `${restaurants.length} locations connected to QRSuite`
         }
       />
+
+      <div className="px-8 py-6">
         {isLoading ? (
-          <div className="flex min-h-70 items-center justify-center text-slate-400  ">
+          <div className="flex min-h-70 items-center justify-center text-slate-400">
             <Loader2 size={20} className="animate-spin" />
           </div>
         ) : isError ? (
@@ -68,15 +66,13 @@ export default function RestaurantsPage() {
             Failed to load restaurants.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 px-7 py-8">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {restaurants.map((r) => (
               <RestaurantCard key={r.id} r={r} />
             ))}
-
           </div>
         )}
       </div>
-
     </>
   );
 }
