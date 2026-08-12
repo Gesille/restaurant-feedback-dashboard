@@ -190,12 +190,11 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
     isLoading || (restaurantFilter !== "all" && isFetchingByRestaurant);
 
   return (
-    <div className="mx-auto max-w-6xl font-['Inter']">
+    <div className=" font-['Inter']">
       <LedgerFonts />
       <Topbar />
       
-      <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
-        
+     <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-6">
         <motion.div
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -221,7 +220,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
           New job
         </button>
       </div>
-{(overdueCount > 0 || soonCount > 0) && (
+ {(overdueCount > 0 || soonCount > 0) && (
         <div className="mx-8 mb-4 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {alerts?.overdue.map((j: any) => {
             const info = getClosingInfo(j);
@@ -236,7 +235,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
               </div>
             );
           })}
-          {alerts?.expiringSoon.map((j: any) => {
+    {alerts?.expiringSoon.map((j: any) => {
             const info = getClosingInfo(j);
             return (
               <div key={j.id} className="flex items-center gap-2">
@@ -251,28 +250,16 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
           })}
         </div>
       )}
-      {/* Stats */}
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+   {/* Stats */}
+      <div className="mt-2 grid grid-cols-2 gap-3 px-8 sm:grid-cols-4">
         <StatCard label="Total" value={jobs.length} icon={InboxIcon} />
-        <StatCard
-          label="Open"
-          value={statusCounts["open"] || 0}
-          icon={BriefcaseIcon}
-        />
-        <StatCard
-          label="Draft"
-          value={statusCounts["draft"] || 0}
-          icon={PencilIcon}
-        />
-        <StatCard
-          label="Closed"
-          value={statusCounts["closed"] || 0}
-          icon={XIcon}
-        />
+        <StatCard label="Open" value={statusCounts["open"] || 0} icon={BriefcaseIcon} />
+        <StatCard label="Draft" value={statusCounts["draft"] || 0} icon={PencilIcon} />
+        <StatCard label="Closed" value={statusCounts["closed"] || 0} icon={XIcon} />
       </div>
 
       {/* Filters */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+     <div className="mt-8 flex flex-wrap items-center gap-3 px-8">
         <div className="relative max-w-sm flex-1 min-w-55">
           <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -285,7 +272,6 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
             className="w-full rounded-xl border border-transparent bg-fuchsia-50/60 py-2.5 pl-10 pr-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-fuchsia-300 focus:bg-white"
           />
         </div>
-
         <select
           value={restaurantFilter}
           onChange={(e) => {
@@ -301,8 +287,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
             </option>
           ))}
         </select>
-
-        <select
+  <select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value as JobStatus | "all");
@@ -319,29 +304,28 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
         </select>
       </div>
 
-      {loading ? (
-        <div className="mt-16 flex items-center justify-center gap-2 text-slate-400">
+    {loading ? (
+        <div className="mt-16 flex items-center justify-center gap-2 px-8 text-slate-400">
           <Loader2Icon className="size-4 animate-spin" />
           <span className="text-sm">Loading jobs…</span>
         </div>
       ) : isError ? (
-        <p className="mt-16 text-center text-sm text-red-600">
+        <p className="mt-16 px-8 text-center text-sm text-red-600">
           {(error as any)?.data?.message || "Something went wrong"}
         </p>
       ) : filtered.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-10 text-center text-sm text-slate-500">
+        <div className="mt-10 mx-8 rounded-2xl border border-dashed border-fuchsia-200 bg-white/50 px-6 py-10 text-center text-sm text-slate-500">
           No jobs match these filters.
         </div>
       ) : (
-        <>
-          <div className="mt-6 overflow-hidden rounded-2xl border border-fuchsia-100 bg-white/70 shadow-sm backdrop-blur-xl">
+<>
+          <div className="mx-8 mt-6 overflow-hidden rounded-2xl border border-fuchsia-100 bg-white/70 shadow-sm backdrop-blur-xl">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-fuchsia-100 text-xs uppercase tracking-wide text-slate-400">
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Location</th>
                   <th className="px-4 py-3 font-medium">Type</th>
-               
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Posted</th>
                   <th className="px-4 py-3 font-medium">Closes</th>
@@ -361,8 +345,8 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-fuchsia-100 bg-white/70 px-4 py-2.5 text-xs text-slate-500">
+       {totalPages > 1 && (
+            <div className="mx-8 mt-4 mb-8 flex items-center justify-between gap-4 rounded-xl border border-fuchsia-100 bg-white/70 px-4 py-2.5 text-xs text-slate-500">
               <span className="font-['IBM_Plex_Mono']">
                 Showing {(safePage - 1) * PAGE_SIZE + 1}–
                 {Math.min(safePage * PAGE_SIZE, filtered.length)} of{" "}
@@ -375,7 +359,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
                   disabled={safePage === 1}
                   className="flex size-7 items-center justify-center rounded-full border border-fuchsia-200 text-fuchsia-600 transition hover:bg-fuchsia-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ChevronLeftIcon className="size-3.5" />
+     <ChevronLeftIcon className="size-3.5" />
                 </button>
                 <span className="font-['IBM_Plex_Mono'] font-medium text-slate-700">
                   {safePage} / {totalPages}
@@ -394,6 +378,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
         </>
       )}
 
+
       <AnimatePresence>
         {(creatingOpen || editingJob) && (
           <JobFormDrawer
@@ -408,10 +393,7 @@ const soonCount = alerts?.expiringSoon.length ?? 0;
 
       <AnimatePresence>
         {deleteTarget && (
-          <DeleteConfirmModal
-            job={deleteTarget}
-            onClose={() => setDeleteTarget(null)}
-          />
+          <DeleteConfirmModal job={deleteTarget} onClose={() => setDeleteTarget(null)} />
         )}
       </AnimatePresence>
     </div>

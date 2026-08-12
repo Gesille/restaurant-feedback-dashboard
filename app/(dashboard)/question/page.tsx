@@ -31,10 +31,10 @@ export default function QuestionsAdminPage() {
   const [tab, setTab] = useState<Tab>("received");
 
   return (
-    <div className="mx-auto max-w-6xl font-['Inter']">
+     <div className="font-['Inter']">
       <LedgerFonts />
       <Topbar />
-      <div className="px-6 py-9">
+      <div className="px-8 py-6">
         <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
           <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-fuchsia-600">
             [ Q&A ]
@@ -48,7 +48,7 @@ export default function QuestionsAdminPage() {
         </motion.div>
       </div>
 
-      <div className="px-6 pb-14">
+    <div className="px-8 pb-14">
         <div className="flex flex-wrap gap-2 rounded-2xl border border-fuchsia-100 bg-white/70 p-2 shadow-sm backdrop-blur-xl">
           <TabButton active={tab === "received"} onClick={() => setTab("received")}>
             Received from candidates
