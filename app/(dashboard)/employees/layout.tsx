@@ -18,7 +18,7 @@ export default function EmployeesLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="mx-auto max-w-6xl font-['Inter']">
+    <div className="font-['Inter']">
       <LedgerFonts />
       {children}
     </div>

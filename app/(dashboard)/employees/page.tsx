@@ -23,7 +23,7 @@ export default function EmployeesPage() {
     <>
       <Topbar />
 
-      <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-8">
+      <div className="flex flex-wrap items-start justify-between gap-4 px-8 py-6">
         <div>
           <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-[#6C4DF4]">[ People ]</span>
           <h1 className="mt-2 font-['Fraunces'] text-3xl italic text-slate-900 sm:text-4xl">Employees</h1>

@@ -14,15 +14,23 @@ export default function EmployeeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-24 text-slate-400">
-        <Loader2Icon className="size-4 animate-spin" />
-        <span className="text-sm">Loading employee…</span>
-      </div>
+      <>
+        <Topbar title="Employee" subtitle="Loading record…" />
+        <div className="flex items-center justify-center gap-2 px-8 py-24 text-slate-400">
+          <Loader2Icon className="size-4 animate-spin" />
+          <span className="text-sm">Loading employee…</span>
+        </div>
+      </>
     );
   }
 
   if (isError || !profile) {
-    return <div className="px-8 py-16 text-center text-sm text-red-600">Employee not found.</div>;
+    return (
+      <>
+        <Topbar title="Employee" subtitle="Not found" />
+        <div className="px-8 py-16 text-center text-sm text-red-600">Employee not found.</div>
+      </>
+    );
   }
 
   return (
