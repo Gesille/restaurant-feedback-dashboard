@@ -341,7 +341,7 @@ export const employeeApi = apiSlice.injectEndpoints({
       providesTags: [{ type: "Employee", id: "CONTRACTS_NEAR_END" }],
     }),
     getEmployeeAnalytics: builder.query<EmployeeAnalytics, void>({
-      query: () => "/employees/analytics",
+      query: () => "/employees/analytics-employee",
       transformResponse: (res: { data: EmployeeAnalytics }) => res.data,
     }),
     updatePotentialBonus: builder.mutation<
