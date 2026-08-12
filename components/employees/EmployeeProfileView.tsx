@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Loader2Icon,
   MailIcon,
@@ -19,6 +19,7 @@ import {
   PieChartIcon,
   ShieldIcon,
   PercentIcon,
+  XIcon,
 } from "lucide-react";
 import { EmployeeProfile, EmployeeSummary } from "@/types";
 import {
@@ -95,18 +96,18 @@ type TabKey =
   | "equity"
   | "airportpass";
 
-const TABS: { key: TabKey; label: string; icon: any }[] = [
-  { key: "personal", label: "Personal & Contact", icon: UserIcon },
-  { key: "job", label: "Job", icon: BriefcaseIcon },
-  { key: "status", label: "Employment Status", icon: ClipboardListIcon },
-  { key: "jobinfo", label: "Job Information", icon: MapPinIcon },
-  { key: "compensation", label: "Compensation", icon: BadgeDollarSignIcon },
-  { key: "allowances", label: "Allowances", icon: WalletIcon },
-  { key: "payrates", label: "Pay Rates & Bonus", icon: PercentIcon },
-  { key: "bonus", label: "Bonus", icon: GiftIcon },
-  { key: "commission", label: "Commission", icon: TrendingUpIcon },
-  { key: "equity", label: "Equity", icon: PieChartIcon },
-  { key: "airportpass", label: "Airport Security Pass", icon: ShieldIcon },
+const TABS: { key: TabKey; label: string; short: string; icon: any }[] = [
+  { key: "personal", label: "Personal & Contact", short: "Personal", icon: UserIcon },
+  { key: "job", label: "Job", short: "Job", icon: BriefcaseIcon },
+  { key: "status", label: "Employment Status", short: "Status", icon: ClipboardListIcon },
+  { key: "jobinfo", label: "Job Information", short: "Job Info", icon: MapPinIcon },
+  { key: "compensation", label: "Compensation", short: "Compensation", icon: BadgeDollarSignIcon },
+  { key: "allowances", label: "Allowances", short: "Allowances", icon: WalletIcon },
+  { key: "payrates", label: "Pay Rates & Bonus", short: "Pay Rates", icon: PercentIcon },
+  { key: "bonus", label: "Bonus", short: "Bonus", icon: GiftIcon },
+  { key: "commission", label: "Commission", short: "Commission", icon: TrendingUpIcon },
+  { key: "equity", label: "Equity", short: "Equity", icon: PieChartIcon },
+  { key: "airportpass", label: "Airport Security Pass", short: "Airport Pass", icon: ShieldIcon },
 ];
 
 export function EmployeeProfileView({
@@ -117,91 +118,54 @@ export function EmployeeProfileView({
   existingEmployees: EmployeeSummary[];
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>("personal");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const jobInfo = currentJobInfo(profile);
   const status = currentStatus(profile);
   const comp = currentCompensation(profile);
   const allowances = currentAllowances(profile);
 
+  const activeTabMeta = TABS.find((t) => t.key === activeTab)!;
+  const activeIndex = TABS.findIndex((t) => t.key === activeTab);
+
+  const selectTab = (key: TabKey) => {
+    setActiveTab(key);
+    setMobileNavOpen(false);
+    // Content area gets its own scroll container on desktop; on mobile the
+    // whole page scrolls, so bring the top of the section into view.
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen w-full bg-[#FBFAFF]">
-      <div className="flex w-full gap-6 px-6 py-8 lg:px-10">
-        {/* ── Sidebar ─────────────────────────────────────────────── */}
-        <aside className="sticky top-8 hidden w-[280px] shrink-0 self-start lg:block">
-          <div className="overflow-hidden rounded-2xl border border-[#EDEBF7] bg-white shadow-sm">
-            <div className="h-16 bg-gradient-to-r from-[#6C4DF4] to-[#8F7BFA]" />
-            <div className="-mt-10 flex flex-col items-center px-6 pb-6 text-center">
-              <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
-                {initials(profile.full_name)}
-              </div>
-              <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">
-                {profile.full_name}
-              </p>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {jobInfo?.job_title || "—"}
-              </p>
+    <div className="min-h-screen w-full bg-[#F7F6FB]">
+      <div className="mx-auto flex w-full max-w-[1400px] gap-6 px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-10">
+        {/* ── Desktop sidebar — sticky, always in view, no scroll-hunting ── */}
+        <aside className="sticky top-8 hidden h-fit w-[272px] shrink-0 self-start lg:block">
+          <IdentityCard profile={profile} jobInfo={jobInfo} status={status} />
 
-              {status?.employment_status && (
-                <span
-                  className={`mt-3 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
-                    STATUS_STYLES[status.employment_status] ||
-                    "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {status.employment_status}
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-4 border-t border-[#EDEBF7] px-6 py-5">
-              <SideRow
-                icon={HashIcon}
-                label="Employee #"
-                value={profile.vitals.employee_number}
+          <nav
+            aria-label="Profile sections"
+            className="mt-4 max-h-[calc(100vh-22rem)] overflow-y-auto rounded-2xl border border-[#EAE7F6] bg-white p-1.5 shadow-[0_1px_2px_rgba(23,15,60,0.04)]"
+          >
+            {TABS.map((tab) => (
+              <SidebarLink
+                key={tab.key}
+                tab={tab}
+                active={activeTab === tab.key}
+                onClick={() => selectTab(tab.key)}
               />
-              <SideRow
-                icon={MailIcon}
-                label="Work Email"
-                value={profile.vitals.work_email}
-              />
-              <SideRow
-                icon={PhoneIcon}
-                label="Work Phone"
-                value={profile.vitals.work_phone}
-              />
-              <SideRow
-                icon={MapPinIcon}
-                label="Location"
-                value={jobInfo?.location}
-              />
-              <SideRow
-                icon={BriefcaseIcon}
-                label="Department"
-                value={jobInfo?.department}
-              />
-              <SideRow
-                icon={CalendarClockIcon}
-                label="Hire Date"
-                value={
-                  profile.job_tab.job.hire_date
-                    ? new Date(
-                        profile.job_tab.job.hire_date,
-                      ).toLocaleDateString()
-                    : undefined
-                }
-              />
-            </div>
-          </div>
+            ))}
+          </nav>
         </aside>
 
         {/* ── Main column ─────────────────────────────────────────── */}
         <div className="min-w-0 flex-1">
-          {/* Mobile identity strip (sidebar collapses below lg) */}
-          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#EDEBF7] bg-white p-4 shadow-sm lg:hidden">
+          {/* Mobile identity strip */}
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#EAE7F6] bg-white p-4 shadow-sm lg:hidden">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#F1EDFF] font-['Fraunces'] italic text-[#6C4DF4]">
               {initials(profile.full_name)}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate font-['Fraunces'] italic text-slate-900">
                 {profile.full_name}
               </p>
@@ -209,40 +173,41 @@ export function EmployeeProfileView({
                 {jobInfo?.job_title || "—"}
               </p>
             </div>
+            {status?.employment_status && (
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
+                  STATUS_STYLES[status.employment_status] ||
+                  "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {status.employment_status}
+              </span>
+            )}
           </div>
+
           {profile.job_tab.job.probation_pending && (
             <ProbationBanner
               employeeId={profile.id}
               probationEndDate={profile.job_tab.job.probation_end_date}
             />
           )}
-          {/* Tab bar */}
-          <div className="overflow-x-auto rounded-2xl border border-[#EDEBF7] bg-white p-1.5 shadow-sm">
-            <nav className="flex min-w-max gap-1">
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                      active
-                        ? "bg-[#6C4DF4] text-white shadow-sm"
-                        : "text-slate-500 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
-                    }`}
-                  >
-                    <Icon className="size-3.5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
+
+          {/* Section heading — orients the user; the count shows progress
+              through the sections without needing the nav visible. */}
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <activeTabMeta.icon className="size-4 text-[#6C4DF4]" />
+              <h2 className="font-['Fraunces'] text-lg italic text-slate-900">
+                {activeTabMeta.label}
+              </h2>
+            </div>
+            <span className="hidden shrink-0 font-['IBM_Plex_Mono'] text-[11px] text-slate-400 lg:block">
+              {String(activeIndex + 1).padStart(2, "0")} / {String(TABS.length).padStart(2, "0")}
+            </span>
           </div>
 
           {/* Tab content */}
-          <div className="mt-6">
+          <div>
             {activeTab === "personal" && <BasicInfoSection profile={profile} />}
             {activeTab === "job" && (
               <JobCoreSection
@@ -303,6 +268,241 @@ export function EmployeeProfileView({
               />
             )}
           </div>
+        </div>
+      </div>
+
+      {/* ── Mobile bottom nav — fixed to the viewport, always reachable,
+          never requires scrolling up or down to find it ── */}
+      <MobileBottomNav
+        tabs={TABS}
+        activeTab={activeTab}
+        onSelect={selectTab}
+        open={mobileNavOpen}
+        onOpenChange={setMobileNavOpen}
+      />
+    </div>
+  );
+}
+
+// ── Identity card (desktop sidebar header) ──────────────────────────────
+function IdentityCard({
+  profile,
+  jobInfo,
+  status,
+}: {
+  profile: EmployeeProfile;
+  jobInfo?: any;
+  status?: any;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#EAE7F6] bg-white shadow-[0_1px_2px_rgba(23,15,60,0.04)]">
+      <div className="h-16 bg-gradient-to-r from-[#6C4DF4] to-[#8F7BFA]" />
+      <div className="-mt-10 flex flex-col items-center px-6 pb-6 text-center">
+        <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
+          {initials(profile.full_name)}
+        </div>
+        <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">
+          {profile.full_name}
+        </p>
+        <p className="mt-0.5 text-sm text-slate-500">
+          {jobInfo?.job_title || "—"}
+        </p>
+
+        {status?.employment_status && (
+          <span
+            className={`mt-3 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
+              STATUS_STYLES[status.employment_status] ||
+              "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {status.employment_status}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-4 border-t border-[#EDEBF7] px-6 py-5">
+        <SideRow
+          icon={HashIcon}
+          label="Employee #"
+          value={profile.vitals.employee_number}
+        />
+        <SideRow
+          icon={MailIcon}
+          label="Work Email"
+          value={profile.vitals.work_email}
+        />
+        <SideRow
+          icon={PhoneIcon}
+          label="Work Phone"
+          value={profile.vitals.work_phone}
+        />
+        <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
+        <SideRow
+          icon={BriefcaseIcon}
+          label="Department"
+          value={jobInfo?.department}
+        />
+        <SideRow
+          icon={CalendarClockIcon}
+          label="Hire Date"
+          value={
+            profile.job_tab.job.hire_date
+              ? new Date(profile.job_tab.job.hire_date).toLocaleDateString()
+              : undefined
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Desktop sidebar link ─────────────────────────────────────────────────
+function SidebarLink({
+  tab,
+  active,
+  onClick,
+}: {
+  tab: { key: TabKey; label: string; icon: any };
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = tab.icon;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`group relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition ${
+        active
+          ? "bg-[#6C4DF4] text-white shadow-sm"
+          : "text-slate-600 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
+      }`}
+    >
+      <Icon
+        className={`size-4 shrink-0 ${active ? "text-white" : "text-slate-400 group-hover:text-[#6C4DF4]"}`}
+      />
+      <span className="truncate">{tab.label}</span>
+    </button>
+  );
+}
+
+// ── Mobile bottom nav: fixed pill trigger + slide-up sheet ─────────────────
+function MobileBottomNav({
+  tabs,
+  activeTab,
+  onSelect,
+  open,
+  onOpenChange,
+}: {
+  tabs: { key: TabKey; label: string; short: string; icon: any }[];
+  activeTab: TabKey;
+  onSelect: (key: TabKey) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const activeMeta = tabs.find((t) => t.key === activeTab)!;
+  const activeIndex = tabs.findIndex((t) => t.key === activeTab);
+
+  // Lock body scroll while the sheet is open.
+  useEffect(() => {
+    if (open) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [open]);
+
+  return (
+    <div className="lg:hidden">
+      {/* Fixed trigger bar — always pinned to the bottom of the viewport,
+          thumb-reachable, no scrolling required to find it. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#EAE7F6] bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onOpenChange(true)}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            className="flex flex-1 items-center gap-2.5 rounded-2xl bg-[#6C4DF4] px-4 py-3 text-left text-white shadow-[0_6px_16px_rgba(108,77,244,0.32)] active:opacity-90"
+          >
+            <activeMeta.icon className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {activeMeta.label}
+            </span>
+            <span className="shrink-0 font-['IBM_Plex_Mono'] text-[10px] text-white/70">
+              {activeIndex + 1}/{tabs.length}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[1px] transition-opacity"
+          onClick={() => onOpenChange(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sheet */}
+      <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choose a section"
+        className={`fixed inset-x-0 bottom-0 z-50 max-h-[75vh] overflow-hidden rounded-t-3xl bg-white shadow-[0_-8px_30px_rgba(23,15,60,0.18)] transition-transform duration-300 ease-out ${
+          open ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-[#EDEBF7] px-5 pb-3 pt-3">
+          <div className="mx-auto h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+        </div>
+        <div className="flex items-center justify-between px-5 pt-2">
+          <p className="font-['Fraunces'] text-base italic text-slate-900">
+            Jump to section
+          </p>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+            className="flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <XIcon className="size-4" />
+          </button>
+        </div>
+        <div className="max-h-[calc(75vh-4.5rem)] overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = tab.key === activeTab;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => onSelect(tab.key)}
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-sm font-medium transition ${
+                  active
+                    ? "bg-[#F1EDFF] text-[#6C4DF4]"
+                    : "text-slate-600 active:bg-slate-50"
+                }`}
+              >
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+                    active ? "bg-[#6C4DF4] text-white" : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                </span>
+                <span className="flex-1">{tab.label}</span>
+                {active && (
+                  <span className="size-1.5 shrink-0 rounded-full bg-[#6C4DF4]" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
