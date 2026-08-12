@@ -281,7 +281,28 @@ updateEmployeeBasicInfo: builder.mutation<
         response.data,
       invalidatesTags: (_result, _error, { id }) => [{ type: "Employee", id }],
     }),
+getPendingProbationReviews: builder.query<EmployeeSummary[], void>({
+  query: () => `/employees/probation/pending`,
+  transformResponse: (response: ApiResponse<EmployeeSummary[]>) => response.data,
+  providesTags: [{ type: "Employee", id: "PROBATION_PENDING" }],
+}),
 
+resolveProbation: builder.mutation<
+  EmployeeProfile,
+  { id: string; passed: boolean; effective_date?: string; new_status?: string; comment?: string }
+>({
+  query: ({ id, ...body }) => ({
+    url: `/employees/${id}/job/probation-review`,
+    method: "POST",
+    body,
+  }),
+  transformResponse: (response: ApiResponse<EmployeeProfile>) => response.data,
+  invalidatesTags: (_result, _error, { id }) => [
+    { type: "Employee", id },
+    { type: "Employee", id: "LIST" },
+    { type: "Employee", id: "PROBATION_PENDING" },
+  ],
+}),
     updatePotentialBonus: builder.mutation<
       EmployeeProfile,
       { id: string; annual_percentage?: number; annual_amount?: number; annual_amount_currency?: string }
@@ -316,4 +337,6 @@ export const {
   useUpdatePayRatesMutation,
   useUpdatePotentialBonusMutation,
     useUpdateEmployeeBasicInfoMutation,
+    useGetPendingProbationReviewsQuery,
+    useResolveProbationMutation,
 } = employeeApi;

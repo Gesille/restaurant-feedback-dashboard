@@ -21,8 +21,16 @@ import {
   useAddEmploymentStatusEntryMutation,
   useAddJobInformationEntryMutation,
   useAddCompensationEntryMutation,
+  useResolveProbationMutation,
 } from "@/redux/Employee/Employeeapi";
-import { FormField, FormSection, ComboField, inputCls, EMPLOYMENT_STATUS_OPTIONS, uniqueSorted } from "./formPrimitives";
+import {
+  FormField,
+  FormSection,
+  ComboField,
+  inputCls,
+  EMPLOYMENT_STATUS_OPTIONS,
+  uniqueSorted,
+} from "./formPrimitives";
 
 function currentJobInfo(profile: EmployeeProfile) {
   return profile.job_tab.job_information.current;
@@ -41,7 +49,12 @@ function initials(name?: string) {
   const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
   return (first + last).toUpperCase();
 }
-
+function addMonthsToDateStr(dateStr: string, months: number) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-[#EAF7EE] text-[#1E8A4C]",
   "On Leave": "bg-[#FFF4E5] text-[#B4740E]",
@@ -83,13 +96,18 @@ export function EmployeeProfileView({
               <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
                 {initials(profile.full_name)}
               </div>
-              <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">{profile.full_name}</p>
-              <p className="mt-0.5 text-sm text-slate-500">{jobInfo?.job_title || "—"}</p>
+              <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">
+                {profile.full_name}
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">
+                {jobInfo?.job_title || "—"}
+              </p>
 
               {status?.employment_status && (
                 <span
                   className={`mt-3 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
-                    STATUS_STYLES[status.employment_status] || "bg-slate-100 text-slate-600"
+                    STATUS_STYLES[status.employment_status] ||
+                    "bg-slate-100 text-slate-600"
                   }`}
                 >
                   {status.employment_status}
@@ -98,15 +116,41 @@ export function EmployeeProfileView({
             </div>
 
             <div className="space-y-4 border-t border-[#EDEBF7] px-6 py-5">
-              <SideRow icon={HashIcon} label="Employee #" value={profile.vitals.employee_number} />
-              <SideRow icon={MailIcon} label="Work Email" value={profile.vitals.work_email} />
-              <SideRow icon={PhoneIcon} label="Work Phone" value={profile.vitals.work_phone} />
-              <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
-              <SideRow icon={BriefcaseIcon} label="Department" value={jobInfo?.department} />
+              <SideRow
+                icon={HashIcon}
+                label="Employee #"
+                value={profile.vitals.employee_number}
+              />
+              <SideRow
+                icon={MailIcon}
+                label="Work Email"
+                value={profile.vitals.work_email}
+              />
+              <SideRow
+                icon={PhoneIcon}
+                label="Work Phone"
+                value={profile.vitals.work_phone}
+              />
+              <SideRow
+                icon={MapPinIcon}
+                label="Location"
+                value={jobInfo?.location}
+              />
+              <SideRow
+                icon={BriefcaseIcon}
+                label="Department"
+                value={jobInfo?.department}
+              />
               <SideRow
                 icon={CalendarClockIcon}
                 label="Hire Date"
-                value={profile.job_tab.job.hire_date ? new Date(profile.job_tab.job.hire_date).toLocaleDateString() : undefined}
+                value={
+                  profile.job_tab.job.hire_date
+                    ? new Date(
+                        profile.job_tab.job.hire_date,
+                      ).toLocaleDateString()
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -120,11 +164,20 @@ export function EmployeeProfileView({
               {initials(profile.full_name)}
             </div>
             <div className="min-w-0">
-              <p className="truncate font-['Fraunces'] italic text-slate-900">{profile.full_name}</p>
-              <p className="truncate text-xs text-slate-500">{jobInfo?.job_title || "—"}</p>
+              <p className="truncate font-['Fraunces'] italic text-slate-900">
+                {profile.full_name}
+              </p>
+              <p className="truncate text-xs text-slate-500">
+                {jobInfo?.job_title || "—"}
+              </p>
             </div>
           </div>
-
+          {profile.job_tab.job.probation_pending && (
+            <ProbationBanner
+              employeeId={profile.id}
+              probationEndDate={profile.job_tab.job.probation_end_date}
+            />
+          )}
           {/* Tab bar */}
           <div className="overflow-x-auto rounded-2xl border border-[#EDEBF7] bg-white p-1.5 shadow-sm">
             <nav className="flex min-w-max gap-1">
@@ -137,7 +190,9 @@ export function EmployeeProfileView({
                     type="button"
                     onClick={() => setActiveTab(tab.key)}
                     className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                      active ? "bg-[#6C4DF4] text-white shadow-sm" : "text-slate-500 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
+                      active
+                        ? "bg-[#6C4DF4] text-white shadow-sm"
+                        : "text-slate-500 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
                     }`}
                   >
                     <Icon className="size-3.5" />
@@ -151,12 +206,29 @@ export function EmployeeProfileView({
           {/* Tab content */}
           <div className="mt-6">
             {activeTab === "personal" && <BasicInfoSection profile={profile} />}
-            {activeTab === "job" && <JobCoreSection employeeId={profile.id} job={profile.job_tab.job} />}
-            {activeTab === "status" && <EmploymentStatusSection employeeId={profile.id} current={status} />}
-            {activeTab === "jobinfo" && (
-              <JobInformationSection employeeId={profile.id} current={jobInfo} existingEmployees={existingEmployees} selfId={profile.id} />
+            {activeTab === "job" && (
+              <JobCoreSection
+                employeeId={profile.id}
+                job={profile.job_tab.job}
+              />
             )}
-            {activeTab === "compensation" && <CompensationSection employeeId={profile.id} current={comp} />}
+            {activeTab === "status" && (
+              <EmploymentStatusSection
+                employeeId={profile.id}
+                current={status}
+              />
+            )}
+            {activeTab === "jobinfo" && (
+              <JobInformationSection
+                employeeId={profile.id}
+                current={jobInfo}
+                existingEmployees={existingEmployees}
+                selfId={profile.id}
+              />
+            )}
+            {activeTab === "compensation" && (
+              <CompensationSection employeeId={profile.id} current={comp} />
+            )}
           </div>
         </div>
       </div>
@@ -164,12 +236,22 @@ export function EmployeeProfileView({
   );
 }
 
-function SideRow({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) {
+function SideRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value?: string;
+}) {
   return (
     <div className="flex items-start gap-2.5">
       <Icon className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
       <div className="min-w-0">
-        <p className="font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
+        <p className="font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          {label}
+        </p>
         <p className="truncate text-sm text-slate-700">{value || "—"}</p>
       </div>
     </div>
@@ -179,19 +261,72 @@ function SideRow({ icon: Icon, label, value }: { icon: any; label: string; value
 // Full-width stacked row: label on the left, value on the right, one field
 // per line. Used for read-only section views so values never crowd or run
 // into each other, no matter how long they are.
-function InfoRow({ icon: Icon, label, value }: { icon?: any; label: string; value?: string }) {
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon?: any;
+  label: string;
+  value?: string;
+}) {
   return (
     <div className="flex items-start gap-6 py-3.5 first:pt-0 last:pb-0">
       <div className="flex w-44 shrink-0 items-center gap-2 pt-0.5 font-['IBM_Plex_Mono'] text-[11px] font-medium uppercase tracking-wide text-slate-400">
         {Icon && <Icon className="size-3.5 shrink-0 text-slate-400" />}
         <span>{label}</span>
       </div>
-      <div className="min-w-0 flex-1 break-words text-sm text-slate-800">{value || "—"}</div>
+      <div className="min-w-0 flex-1 break-words text-sm text-slate-800">
+        {value || "—"}
+      </div>
     </div>
   );
 }
 
+function ProbationBanner({
+  employeeId,
+  probationEndDate,
+}: {
+  employeeId: string;
+  probationEndDate?: string;
+}) {
+  const [resolve, { isLoading }] = useResolveProbationMutation();
 
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+      <div>
+        <p className="font-['Fraunces'] italic text-amber-900">
+          Probation ended{" "}
+          {probationEndDate
+            ? new Date(probationEndDate).toLocaleDateString()
+            : ""}
+        </p>
+        <p className="mt-0.5 text-xs text-amber-700">
+          Confirm whether this employee has passed their probation.
+        </p>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={() => resolve({ id: employeeId, passed: false })}
+          disabled={isLoading}
+          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+        >
+          Did not pass
+        </button>
+        <button
+          type="button"
+          onClick={() => resolve({ id: employeeId, passed: true })}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+        >
+          {isLoading && <Loader2Icon className="size-3 animate-spin" />}
+          Passed — move to Full-time
+        </button>
+      </div>
+    </div>
+  );
+}
 // ── Personal / Address / Contact / Access — all editable in place ────────
 function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
   const [editing, setEditing] = useState(false);
@@ -204,7 +339,9 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
     middle_name: v.middle_name || "",
     last_name: v.last_name || "",
     preferred_name: v.preferred_name || "",
-    birth_date: v.birth_date ? new Date(v.birth_date).toISOString().slice(0, 10) : "",
+    birth_date: v.birth_date
+      ? new Date(v.birth_date).toISOString().slice(0, 10)
+      : "",
     gender: v.gender || "",
     marital_status: v.marital_status || "",
 
@@ -226,8 +363,10 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
   });
   const [formError, setFormError] = useState<string | null>(null);
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
+  const set =
+    (key: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSave = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) {
@@ -261,7 +400,9 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
         work_email: form.work_email || undefined,
         home_email: form.home_email || undefined,
 
-        self_service_access: form.self_service_access as "full_access" | "no_access",
+        self_service_access: form.self_service_access as
+          | "full_access"
+          | "no_access",
       }).unwrap();
       setEditing(false);
     } catch (err: any) {
@@ -276,7 +417,14 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
           <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
             <InfoRow label="Name" value={profile.full_name} />
             <InfoRow label="Preferred Name" value={v.preferred_name} />
-            <InfoRow label="Birth Date" value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined} />
+            <InfoRow
+              label="Birth Date"
+              value={
+                v.birth_date
+                  ? new Date(v.birth_date).toLocaleDateString()
+                  : undefined
+              }
+            />
             <InfoRow label="Gender" value={v.gender} />
             <InfoRow label="Marital Status" value={v.marital_status} />
             <InfoRow label="Address" value={v.address} />
@@ -285,9 +433,20 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
             <InfoRow icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
             <InfoRow label="Mobile" value={v.mobile_phone} />
             <InfoRow label="Home Phone" value={v.home_phone} />
-            <InfoRow label="Self-service access" value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"} />
+            <InfoRow
+              label="Self-service access"
+              value={
+                v.self_service_access === "full_access"
+                  ? "Allow Access"
+                  : "No Access"
+              }
+            />
           </div>
-          <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
             Edit
           </button>
         </div>
@@ -299,16 +458,59 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
     <FormSection title="Personal & Contact">
       <div className="space-y-6">
         <div>
-          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">Personal</p>
+          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Personal
+          </p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <FormField label="Employee #"><input value={form.employee_number} onChange={set("employee_number")} className={inputCls} /></FormField>
-            <FormField label="First Name *"><input value={form.first_name} onChange={set("first_name")} className={inputCls} /></FormField>
-            <FormField label="Middle Name"><input value={form.middle_name} onChange={set("middle_name")} className={inputCls} /></FormField>
-            <FormField label="Last Name *"><input value={form.last_name} onChange={set("last_name")} className={inputCls} /></FormField>
-            <FormField label="Preferred Name"><input value={form.preferred_name} onChange={set("preferred_name")} className={inputCls} /></FormField>
-            <FormField label="Birth Date"><input type="date" value={form.birth_date} onChange={set("birth_date")} className={inputCls} /></FormField>
+            <FormField label="Employee #">
+              <input
+                value={form.employee_number}
+                onChange={set("employee_number")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="First Name *">
+              <input
+                value={form.first_name}
+                onChange={set("first_name")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Middle Name">
+              <input
+                value={form.middle_name}
+                onChange={set("middle_name")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Last Name *">
+              <input
+                value={form.last_name}
+                onChange={set("last_name")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Preferred Name">
+              <input
+                value={form.preferred_name}
+                onChange={set("preferred_name")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Birth Date">
+              <input
+                type="date"
+                value={form.birth_date}
+                onChange={set("birth_date")}
+                className={inputCls}
+              />
+            </FormField>
             <FormField label="Gender">
-              <select value={form.gender} onChange={set("gender")} className={inputCls}>
+              <select
+                value={form.gender}
+                onChange={set("gender")}
+                className={inputCls}
+              >
                 <option value="">– Select –</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -316,7 +518,11 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
               </select>
             </FormField>
             <FormField label="Marital Status">
-              <select value={form.marital_status} onChange={set("marital_status")} className={inputCls}>
+              <select
+                value={form.marital_status}
+                onChange={set("marital_status")}
+                className={inputCls}
+              >
                 <option value="">– Select –</option>
                 <option value="Single">Single</option>
                 <option value="Married">Married</option>
@@ -328,51 +534,143 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
         </div>
 
         <div>
-          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">Address</p>
+          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Address
+          </p>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Street 1"><input value={form.street1} onChange={set("street1")} className={inputCls} /></FormField>
-            <FormField label="Street 2"><input value={form.street2} onChange={set("street2")} className={inputCls} /></FormField>
+            <FormField label="Street 1">
+              <input
+                value={form.street1}
+                onChange={set("street1")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Street 2">
+              <input
+                value={form.street2}
+                onChange={set("street2")}
+                className={inputCls}
+              />
+            </FormField>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-4">
-            <FormField label="City"><input value={form.city} onChange={set("city")} className={inputCls} /></FormField>
-            <FormField label="Province"><input value={form.province} onChange={set("province")} className={inputCls} /></FormField>
-            <FormField label="Postal Code"><input value={form.postal_code} onChange={set("postal_code")} className={inputCls} /></FormField>
+            <FormField label="City">
+              <input
+                value={form.city}
+                onChange={set("city")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Province">
+              <input
+                value={form.province}
+                onChange={set("province")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Postal Code">
+              <input
+                value={form.postal_code}
+                onChange={set("postal_code")}
+                className={inputCls}
+              />
+            </FormField>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <FormField label="Country"><input value={form.country} onChange={set("country")} className={inputCls} /></FormField>
+            <FormField label="Country">
+              <input
+                value={form.country}
+                onChange={set("country")}
+                className={inputCls}
+              />
+            </FormField>
           </div>
         </div>
 
         <div>
-          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">Contact</p>
+          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Contact
+          </p>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Work Phone"><input value={form.work_phone} onChange={set("work_phone")} className={inputCls} /></FormField>
-            <FormField label="Ext"><input value={form.work_phone_ext} onChange={set("work_phone_ext")} className={inputCls} /></FormField>
-            <FormField label="Mobile Phone"><input value={form.mobile_phone} onChange={set("mobile_phone")} className={inputCls} /></FormField>
-            <FormField label="Home Phone"><input value={form.home_phone} onChange={set("home_phone")} className={inputCls} /></FormField>
-            <FormField label="Work Email"><input type="email" value={form.work_email} onChange={set("work_email")} className={inputCls} /></FormField>
-            <FormField label="Home Email"><input type="email" value={form.home_email} onChange={set("home_email")} className={inputCls} /></FormField>
+            <FormField label="Work Phone">
+              <input
+                value={form.work_phone}
+                onChange={set("work_phone")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Ext">
+              <input
+                value={form.work_phone_ext}
+                onChange={set("work_phone_ext")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Mobile Phone">
+              <input
+                value={form.mobile_phone}
+                onChange={set("mobile_phone")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Home Phone">
+              <input
+                value={form.home_phone}
+                onChange={set("home_phone")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Work Email">
+              <input
+                type="email"
+                value={form.work_email}
+                onChange={set("work_email")}
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Home Email">
+              <input
+                type="email"
+                value={form.home_email}
+                onChange={set("home_email")}
+                className={inputCls}
+              />
+            </FormField>
           </div>
         </div>
 
         <div>
-          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">Self-service access</p>
+          <p className="mb-3 font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Self-service access
+          </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setForm((f) => ({ ...f, self_service_access: "full_access" }))}
+              onClick={() =>
+                setForm((f) => ({ ...f, self_service_access: "full_access" }))
+              }
               className={`rounded-xl border p-4 text-left transition ${form.self_service_access === "full_access" ? "border-[#6C4DF4] bg-[#F1EDFF]" : "border-[#EDEBF7] bg-white hover:bg-[#FBFAFF]"}`}
             >
-              <p className="font-['Fraunces'] italic text-slate-900">Allow Access</p>
-              <p className="mt-1 text-xs text-slate-500">They will be able to log in using the access level in settings.</p>
+              <p className="font-['Fraunces'] italic text-slate-900">
+                Allow Access
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                They will be able to log in using the access level in settings.
+              </p>
             </button>
             <button
               type="button"
-              onClick={() => setForm((f) => ({ ...f, self_service_access: "no_access" }))}
+              onClick={() =>
+                setForm((f) => ({ ...f, self_service_access: "no_access" }))
+              }
               className={`rounded-xl border p-4 text-left transition ${form.self_service_access === "no_access" ? "border-[#6C4DF4] bg-[#F1EDFF]" : "border-[#EDEBF7] bg-white hover:bg-[#FBFAFF]"}`}
             >
-              <p className="font-['Fraunces'] italic text-slate-900">No Access</p>
-              <p className="mt-1 text-xs text-slate-500">They won&apos;t have access and won&apos;t be able to log in.</p>
+              <p className="font-['Fraunces'] italic text-slate-900">
+                No Access
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                They won&apos;t have access and won&apos;t be able to log in.
+              </p>
             </button>
           </div>
         </div>
@@ -380,10 +678,19 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
         {formError && <p className="text-xs text-red-600">{formError}</p>}
 
         <div className="flex gap-2 border-t border-[#EDEBF7] pt-4">
-          <button type="button" onClick={() => setEditing(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]"
+          >
             Cancel
           </button>
-          <button type="button" onClick={handleSave} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+          >
             {isLoading && <Loader2Icon className="size-3 animate-spin" />}
             Save
           </button>
@@ -396,11 +703,18 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
 // ── Job core — Hire Date / Job Code / Probation / Contract / Hours / Days ─
 function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
   const [editing, setEditing] = useState(false);
+  const [probationTouched, setProbationTouched] = useState(false);
   const [form, setForm] = useState({
-    hire_date: job.hire_date ? new Date(job.hire_date).toISOString().slice(0, 10) : "",
+    hire_date: job.hire_date
+      ? new Date(job.hire_date).toISOString().slice(0, 10)
+      : "",
     job_code: job.job_code || "",
-    probation_end_date: job.probation_end_date ? new Date(job.probation_end_date).toISOString().slice(0, 10) : "",
-    contract_end_date: job.contract_end_date ? new Date(job.contract_end_date).toISOString().slice(0, 10) : "",
+    probation_end_date: job.probation_end_date
+      ? new Date(job.probation_end_date).toISOString().slice(0, 10)
+      : "",
+    contract_end_date: job.contract_end_date
+      ? new Date(job.contract_end_date).toISOString().slice(0, 10)
+      : "",
     contracted_hours_per_week: job.contracted_hours_per_week ?? "",
     contracted_days_per_week: job.contracted_days_per_week ?? "",
   });
@@ -413,8 +727,14 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
       job_code: form.job_code || undefined,
       probation_end_date: form.probation_end_date || undefined,
       contract_end_date: form.contract_end_date || undefined,
-      contracted_hours_per_week: form.contracted_hours_per_week === "" ? undefined : Number(form.contracted_hours_per_week),
-      contracted_days_per_week: form.contracted_days_per_week === "" ? undefined : Number(form.contracted_days_per_week),
+      contracted_hours_per_week:
+        form.contracted_hours_per_week === ""
+          ? undefined
+          : Number(form.contracted_hours_per_week),
+      contracted_days_per_week:
+        form.contracted_days_per_week === ""
+          ? undefined
+          : Number(form.contracted_days_per_week),
     }).unwrap();
     setEditing(false);
   };
@@ -424,12 +744,41 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
       {!editing ? (
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-            <InfoRow label="Hire Date" value={job.hire_date ? new Date(job.hire_date).toLocaleDateString() : undefined} />
+            <InfoRow
+              label="Hire Date"
+              value={
+                job.hire_date
+                  ? new Date(job.hire_date).toLocaleDateString()
+                  : undefined
+              }
+            />
             <InfoRow label="Job Code" value={job.job_code} />
-            <InfoRow label="Direct Reports" value={String(job.direct_reports_count)} />
-            <InfoRow label="Probation End" value={job.probation_end_date ? new Date(job.probation_end_date).toLocaleDateString() : undefined} />
+            <InfoRow
+              label="Direct Reports"
+              value={String(job.direct_reports_count)}
+            />
+            <InfoRow
+              label="Probation End"
+              value={
+                job.probation_end_date
+                  ? new Date(job.probation_end_date).toLocaleDateString()
+                  : undefined
+              }
+            />
+            <InfoRow
+              label="Contract End"
+              value={
+                job.contract_end_date
+                  ? new Date(job.contract_end_date).toLocaleDateString()
+                  : undefined
+              }
+            />
           </div>
-          <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
             Edit
           </button>
         </div>
@@ -437,29 +786,99 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Hire Date">
-              <input type="date" value={form.hire_date} onChange={(e) => setForm((f) => ({ ...f, hire_date: e.target.value }))} className={inputCls} />
+              <input
+                type="date"
+                value={form.hire_date}
+                onChange={(e) => {
+                  const newHire = e.target.value;
+                  setForm((f) => ({
+                    ...f,
+                    hire_date: newHire,
+                    probation_end_date: probationTouched
+                      ? f.probation_end_date
+                      : addMonthsToDateStr(newHire, 4),
+                  }));
+                }}
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Job Code">
-              <input value={form.job_code} onChange={(e) => setForm((f) => ({ ...f, job_code: e.target.value }))} className={inputCls} />
+              <input
+                value={form.job_code}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, job_code: e.target.value }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Probation End">
-              <input type="date" value={form.probation_end_date} onChange={(e) => setForm((f) => ({ ...f, probation_end_date: e.target.value }))} className={inputCls} />
+              <input
+                type="date"
+                value={form.probation_end_date}
+                onChange={(e) => {
+                  setProbationTouched(true);
+                  setForm((f) => ({
+                    ...f,
+                    probation_end_date: e.target.value,
+                  }));
+                }}
+                className={inputCls}
+              />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Auto-filled 4 months from hire date — edit if needed.
+              </p>
             </FormField>
             <FormField label="Contract End">
-              <input type="date" value={form.contract_end_date} onChange={(e) => setForm((f) => ({ ...f, contract_end_date: e.target.value }))} className={inputCls} />
+              <input
+                type="date"
+                value={form.contract_end_date}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, contract_end_date: e.target.value }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Contracted Hours/Week">
-              <input type="number" value={form.contracted_hours_per_week} onChange={(e) => setForm((f) => ({ ...f, contracted_hours_per_week: e.target.value }))} className={inputCls} />
+              <input
+                type="number"
+                value={form.contracted_hours_per_week}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    contracted_hours_per_week: e.target.value,
+                  }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Contracted Days/Week">
-              <input type="number" value={form.contracted_days_per_week} onChange={(e) => setForm((f) => ({ ...f, contracted_days_per_week: e.target.value }))} className={inputCls} />
+              <input
+                type="number"
+                value={form.contracted_days_per_week}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    contracted_days_per_week: e.target.value,
+                  }))
+                }
+                className={inputCls}
+              />
             </FormField>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setEditing(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]"
+            >
               Cancel
             </button>
-            <button type="button" onClick={handleSave} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
               {isLoading && <Loader2Icon className="size-3 animate-spin" />}
               Save
             </button>
@@ -471,16 +890,29 @@ function JobCoreSection({ employeeId, job }: { employeeId: string; job: any }) {
 }
 
 // ── Employment status — effective-dated, add new entry ────────────────────
-function EmploymentStatusSection({ employeeId, current }: { employeeId: string; current?: any }) {
+function EmploymentStatusSection({
+  employeeId,
+  current,
+}: {
+  employeeId: string;
+  current?: any;
+}) {
   const [adding, setAdding] = useState(false);
-  const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().slice(0, 10));
+  const [effectiveDate, setEffectiveDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
   const [status, setStatus] = useState("");
   const [comment, setComment] = useState("");
   const [addEntry, { isLoading }] = useAddEmploymentStatusEntryMutation();
 
   const handleAdd = async () => {
     if (!status) return;
-    await addEntry({ id: employeeId, effective_date: effectiveDate, employment_status: status, comment: comment || undefined }).unwrap();
+    await addEntry({
+      id: employeeId,
+      effective_date: effectiveDate,
+      employment_status: status,
+      comment: comment || undefined,
+    }).unwrap();
     setAdding(false);
     setStatus("");
     setComment("");
@@ -493,7 +925,11 @@ function EmploymentStatusSection({ employeeId, current }: { employeeId: string; 
           <InfoRow label="Current Status" value={current?.employment_status} />
         </div>
         {!adding && (
-          <button type="button" onClick={() => setAdding(true)} className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
@@ -502,18 +938,41 @@ function EmploymentStatusSection({ employeeId, current }: { employeeId: string; 
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Effective Date">
-              <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
+              <input
+                type="date"
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+                className={inputCls}
+              />
             </FormField>
-            <ComboField label="Status" value={status} onChange={setStatus} options={EMPLOYMENT_STATUS_OPTIONS} />
+            <ComboField
+              label="Status"
+              value={status}
+              onChange={setStatus}
+              options={EMPLOYMENT_STATUS_OPTIONS}
+            />
           </div>
           <FormField label="Comment">
-            <input value={comment} onChange={(e) => setComment(e.target.value)} className={inputCls} />
+            <input
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className={inputCls}
+            />
           </FormField>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]"
+            >
               Cancel
             </button>
-            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
               {isLoading && <Loader2Icon className="size-3 animate-spin" />}
               Save
             </button>
@@ -537,14 +996,30 @@ function JobInformationSection({
   selfId: string;
 }) {
   const [adding, setAdding] = useState(false);
-  const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().slice(0, 10));
-  const [form, setForm] = useState({ job_title: "", reports_to: "", department: "", division: "", location: "" });
+  const [effectiveDate, setEffectiveDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [form, setForm] = useState({
+    job_title: "",
+    reports_to: "",
+    department: "",
+    division: "",
+    location: "",
+  });
   const [addEntry, { isLoading }] = useAddJobInformationEntryMutation();
 
-  const jobTitleOptions = uniqueSorted(existingEmployees.map((e) => e.job_title));
-  const departmentOptions = uniqueSorted(existingEmployees.map((e) => e.department));
-  const divisionOptions = uniqueSorted(existingEmployees.map((e) => e.division));
-  const locationOptions = uniqueSorted(existingEmployees.map((e) => e.location));
+  const jobTitleOptions = uniqueSorted(
+    existingEmployees.map((e) => e.job_title),
+  );
+  const departmentOptions = uniqueSorted(
+    existingEmployees.map((e) => e.department),
+  );
+  const divisionOptions = uniqueSorted(
+    existingEmployees.map((e) => e.division),
+  );
+  const locationOptions = uniqueSorted(
+    existingEmployees.map((e) => e.location),
+  );
 
   const handleAdd = async () => {
     if (!form.job_title) return;
@@ -570,7 +1045,11 @@ function JobInformationSection({
           <InfoRow label="Location" value={current?.location} />
         </div>
         {!adding && (
-          <button type="button" onClick={() => setAdding(true)} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
@@ -578,27 +1057,71 @@ function JobInformationSection({
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <FormField label="Effective Date">
-            <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
+            <input
+              type="date"
+              value={effectiveDate}
+              onChange={(e) => setEffectiveDate(e.target.value)}
+              className={inputCls}
+            />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <ComboField label="Job Title" value={form.job_title} onChange={(v) => setForm((f) => ({ ...f, job_title: v }))} options={jobTitleOptions} />
+            <ComboField
+              label="Job Title"
+              value={form.job_title}
+              onChange={(v) => setForm((f) => ({ ...f, job_title: v }))}
+              options={jobTitleOptions}
+            />
             <FormField label="Reports To">
-              <select value={form.reports_to} onChange={(e) => setForm((f) => ({ ...f, reports_to: e.target.value }))} className={inputCls}>
+              <select
+                value={form.reports_to}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, reports_to: e.target.value }))
+                }
+                className={inputCls}
+              >
                 <option value="">– Select –</option>
-                {existingEmployees.filter((e) => e.id !== selfId).map((e) => (
-                  <option key={e.id} value={e.id}>{e.full_name}</option>
-                ))}
+                {existingEmployees
+                  .filter((e) => e.id !== selfId)
+                  .map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.full_name}
+                    </option>
+                  ))}
               </select>
             </FormField>
-            <ComboField label="Department" value={form.department} onChange={(v) => setForm((f) => ({ ...f, department: v }))} options={departmentOptions} />
-            <ComboField label="Division" value={form.division} onChange={(v) => setForm((f) => ({ ...f, division: v }))} options={divisionOptions} />
-            <ComboField label="Location" value={form.location} onChange={(v) => setForm((f) => ({ ...f, location: v }))} options={locationOptions} />
+            <ComboField
+              label="Department"
+              value={form.department}
+              onChange={(v) => setForm((f) => ({ ...f, department: v }))}
+              options={departmentOptions}
+            />
+            <ComboField
+              label="Division"
+              value={form.division}
+              onChange={(v) => setForm((f) => ({ ...f, division: v }))}
+              options={divisionOptions}
+            />
+            <ComboField
+              label="Location"
+              value={form.location}
+              onChange={(v) => setForm((f) => ({ ...f, location: v }))}
+              options={locationOptions}
+            />
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]"
+            >
               Cancel
             </button>
-            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
               {isLoading && <Loader2Icon className="size-3 animate-spin" />}
               Save
             </button>
@@ -610,14 +1133,34 @@ function JobInformationSection({
 }
 
 // ── Compensation — effective-dated, add new entry ──────────────────────────
-function CompensationSection({ employeeId, current }: { employeeId: string; current?: any }) {
+function CompensationSection({
+  employeeId,
+  current,
+}: {
+  employeeId: string;
+  current?: any;
+}) {
   const [adding, setAdding] = useState(false);
-  const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().slice(0, 10));
-  const [form, setForm] = useState({ pay_schedule: "", pay_type: "", pay_rate_amount: "", pay_rate_currency: "XCD", pay_rate_per: "" });
+  const [effectiveDate, setEffectiveDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [form, setForm] = useState({
+    pay_schedule: "",
+    pay_type: "",
+    pay_rate_amount: "",
+    pay_rate_currency: "XCD",
+    pay_rate_per: "",
+  });
   const [addEntry, { isLoading }] = useAddCompensationEntryMutation();
 
   const handleAdd = async () => {
-    if (!form.pay_schedule || !form.pay_type || form.pay_rate_amount === "" || !form.pay_rate_per) return;
+    if (
+      !form.pay_schedule ||
+      !form.pay_type ||
+      form.pay_rate_amount === "" ||
+      !form.pay_rate_per
+    )
+      return;
     await addEntry({
       id: employeeId,
       effective_date: effectiveDate,
@@ -635,11 +1178,22 @@ function CompensationSection({ employeeId, current }: { employeeId: string; curr
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
           <InfoRow label="Pay Type" value={current?.pay_type} />
-          <InfoRow label="Rate" value={current ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}` : undefined} />
+          <InfoRow
+            label="Rate"
+            value={
+              current
+                ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}`
+                : undefined
+            }
+          />
           <InfoRow label="Schedule" value={current?.pay_schedule} />
         </div>
         {!adding && (
-          <button type="button" onClick={() => setAdding(true)} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline">
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+          >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
@@ -647,14 +1201,31 @@ function CompensationSection({ employeeId, current }: { employeeId: string; curr
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <FormField label="Effective Date">
-            <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
+            <input
+              type="date"
+              value={effectiveDate}
+              onChange={(e) => setEffectiveDate(e.target.value)}
+              className={inputCls}
+            />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Pay Schedule">
-              <input value={form.pay_schedule} onChange={(e) => setForm((f) => ({ ...f, pay_schedule: e.target.value }))} className={inputCls} />
+              <input
+                value={form.pay_schedule}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pay_schedule: e.target.value }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Pay Type">
-              <select value={form.pay_type} onChange={(e) => setForm((f) => ({ ...f, pay_type: e.target.value }))} className={inputCls}>
+              <select
+                value={form.pay_type}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pay_type: e.target.value }))
+                }
+                className={inputCls}
+              >
                 <option value="">– Select –</option>
                 <option value="Salary">Salary</option>
                 <option value="Hourly">Hourly</option>
@@ -663,13 +1234,32 @@ function CompensationSection({ employeeId, current }: { employeeId: string; curr
           </div>
           <div className="grid grid-cols-3 gap-4">
             <FormField label="Amount">
-              <input type="number" value={form.pay_rate_amount} onChange={(e) => setForm((f) => ({ ...f, pay_rate_amount: e.target.value }))} className={inputCls} />
+              <input
+                type="number"
+                value={form.pay_rate_amount}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pay_rate_amount: e.target.value }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Currency">
-              <input value={form.pay_rate_currency} onChange={(e) => setForm((f) => ({ ...f, pay_rate_currency: e.target.value }))} className={inputCls} />
+              <input
+                value={form.pay_rate_currency}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pay_rate_currency: e.target.value }))
+                }
+                className={inputCls}
+              />
             </FormField>
             <FormField label="Per">
-              <select value={form.pay_rate_per} onChange={(e) => setForm((f) => ({ ...f, pay_rate_per: e.target.value }))} className={inputCls}>
+              <select
+                value={form.pay_rate_per}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pay_rate_per: e.target.value }))
+                }
+                className={inputCls}
+              >
                 <option value="">– Select –</option>
                 <option value="Hour">Hour</option>
                 <option value="Pay Period">Pay Period</option>
@@ -679,10 +1269,19 @@ function CompensationSection({ employeeId, current }: { employeeId: string; curr
             </FormField>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setAdding(false)} className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]">
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="rounded-lg border border-[#EDEBF7] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-[#FBFAFF]"
+            >
               Cancel
             </button>
-            <button type="button" onClick={handleAdd} disabled={isLoading} className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60">
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 rounded-lg bg-[#6C4DF4] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
               {isLoading && <Loader2Icon className="size-3 animate-spin" />}
               Save
             </button>

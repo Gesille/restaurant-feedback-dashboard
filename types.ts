@@ -393,6 +393,7 @@ export interface EmployeeProfile {
       job_code?: string;
       direct_reports_count: number;
       probation_end_date?: string;
+      probation_pending?: boolean;
       contract_end_date?: string;
       contracted_hours_per_week?: number;
       contracted_days_per_week?: number;
