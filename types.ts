@@ -456,3 +456,17 @@ export interface CreateEmployeeRequest {
 
   self_service_access?: SelfServiceAccess;
 }
+
+export interface EmployeeAnalytics {
+  total: number;
+  fullAccess: number;
+  noAccess: number;
+  hiredThisMonth: number;
+  avgTenureDays: number;
+  byDepartment: { department: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+  byLocation: { location: string; count: number }[];
+  hiringTrend: { month: string; hires: number }[];
+  probationPendingCount: number;
+  contractsNearingEndCount: number;
+}

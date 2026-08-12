@@ -16,7 +16,6 @@ import {
   CartesianGrid,
 } from "recharts";
 
-/* ---------- Palette: same ledger system as the per-restaurant page ---------- */
 const INK = "#26211B";
 const PAPER_BASE = "#FFFFFF";
 const SURFACE = "rgba(255, 255, 255, 0.6)";

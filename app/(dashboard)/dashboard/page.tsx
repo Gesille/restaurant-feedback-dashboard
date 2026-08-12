@@ -13,6 +13,8 @@ import { useGetDashboardStatsQuery } from "@/redux/dashboard/dashboardApi";
 import { ApplicantFunnelCard } from "@/components/dashboard/Applicantfunnelcard";
 import { ConversionRateCard } from "@/components/dashboard/Conversionratecard";
 import { SetupNeededCard } from "@/components/dashboard/Setupneededcard";
+import { EmployeeOverviewCard } from "@/components/dashboard/Employeeoverviewcard";
+
 
 export default function DashboardPage() {
   const { data: statsRes, isLoading: statsLoading } = useGetDashboardStatsQuery();
@@ -80,10 +82,11 @@ export default function DashboardPage() {
           <RecentActivity />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
           <ApplicantFunnelCard />
           <ConversionRateCard />
           <SetupNeededCard />
+          <EmployeeOverviewCard />
         </div>
       </div>
     </>

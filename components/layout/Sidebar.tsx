@@ -36,6 +36,7 @@ const mainNav: { href: string; label: string; icon: any; color: BrandColor; badg
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "violet" },
   { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed, color: "teal" },
   { href: "/analyticsPerRestaurant", label: "Insights", icon:FileChartPie, color: "amber"},
+  { href: "/Employees-analytics", label: "Employees Analytics ", icon:FileChartPie, color: "amber"},
   { href: "/analytics", label: "Analytics", icon: BarChart3, color: "pink" },
 ];
 

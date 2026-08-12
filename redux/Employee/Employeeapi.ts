@@ -1,5 +1,10 @@
-
-import { ApiResponse, CreateEmployeeRequest, EmployeeProfile, EmployeeSummary } from "@/types";
+import {
+  ApiResponse,
+  CreateEmployeeRequest,
+  EmployeeAnalytics,
+  EmployeeProfile,
+  EmployeeSummary,
+} from "@/types";
 import { apiSlice } from "../api/apiSlice";
 
 export const employeeApi = apiSlice.injectEndpoints({
@@ -35,7 +40,7 @@ export const employeeApi = apiSlice.injectEndpoints({
         response.data,
       invalidatesTags: [{ type: "Employee", id: "LIST" }],
     }),
-updateEmployeeBasicInfo: builder.mutation<
+    updateEmployeeBasicInfo: builder.mutation<
       EmployeeProfile,
       {
         id: string;
@@ -67,7 +72,8 @@ updateEmployeeBasicInfo: builder.mutation<
         method: "PUT",
         body,
       }),
-      transformResponse: (response: ApiResponse<EmployeeProfile>) => response.data,
+      transformResponse: (response: ApiResponse<EmployeeProfile>) =>
+        response.data,
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Employee", id },
         { type: "Employee", id: "LIST" },
@@ -203,7 +209,12 @@ updateEmployeeBasicInfo: builder.mutation<
 
     addAirportSecurityPassEntry: builder.mutation<
       EmployeeProfile,
-      { id: string; issue_date: string; expiration_date: string; comments?: string }
+      {
+        id: string;
+        issue_date: string;
+        expiration_date: string;
+        comments?: string;
+      }
     >({
       query: ({ id, ...body }) => ({
         url: `/employees/${id}/job/airport-security-pass`,
@@ -217,7 +228,13 @@ updateEmployeeBasicInfo: builder.mutation<
 
     addBonusEntry: builder.mutation<
       EmployeeProfile,
-      { id: string; date: string; amount: number; reason?: string; comment?: string }
+      {
+        id: string;
+        date: string;
+        amount: number;
+        reason?: string;
+        comment?: string;
+      }
     >({
       query: ({ id, ...body }) => ({
         url: `/employees/${id}/job/bonus`,
@@ -270,7 +287,13 @@ updateEmployeeBasicInfo: builder.mutation<
 
     updatePayRates: builder.mutation<
       EmployeeProfile,
-      { id: string; daily?: number; holiday?: number; sick?: number; vacation_pay_in_lieu_rate?: number }
+      {
+        id: string;
+        daily?: number;
+        holiday?: number;
+        sick?: number;
+        vacation_pay_in_lieu_rate?: number;
+      }
     >({
       query: ({ id, ...body }) => ({
         url: `/employees/${id}/job/pay-rates`,
@@ -281,36 +304,54 @@ updateEmployeeBasicInfo: builder.mutation<
         response.data,
       invalidatesTags: (_result, _error, { id }) => [{ type: "Employee", id }],
     }),
-getPendingProbationReviews: builder.query<EmployeeSummary[], void>({
-  query: () => `/employees/probation/pending`,
-  transformResponse: (response: ApiResponse<EmployeeSummary[]>) => response.data,
-  providesTags: [{ type: "Employee", id: "PROBATION_PENDING" }],
-}),
+    getPendingProbationReviews: builder.query<EmployeeSummary[], void>({
+      query: () => `/employees/probation/pending`,
+      transformResponse: (response: ApiResponse<EmployeeSummary[]>) =>
+        response.data,
+      providesTags: [{ type: "Employee", id: "PROBATION_PENDING" }],
+    }),
 
-resolveProbation: builder.mutation<
-  EmployeeProfile,
-  { id: string; passed: boolean; effective_date?: string; new_status?: string; comment?: string }
->({
-  query: ({ id, ...body }) => ({
-    url: `/employees/${id}/job/probation-review`,
-    method: "POST",
-    body,
-  }),
-  transformResponse: (response: ApiResponse<EmployeeProfile>) => response.data,
-  invalidatesTags: (_result, _error, { id }) => [
-    { type: "Employee", id },
-    { type: "Employee", id: "LIST" },
-    { type: "Employee", id: "PROBATION_PENDING" },
-  ],
-}),
-getContractsNearingEnd: builder.query<EmployeeSummary[], void>({
-  query: () => `/employees/contracts/near-end`,
-  transformResponse: (response: ApiResponse<EmployeeSummary[]>) => response.data,
-  providesTags: [{ type: "Employee", id: "CONTRACTS_NEAR_END" }],
-}),
+    resolveProbation: builder.mutation<
+      EmployeeProfile,
+      {
+        id: string;
+        passed: boolean;
+        effective_date?: string;
+        new_status?: string;
+        comment?: string;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/employees/${id}/job/probation-review`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<EmployeeProfile>) =>
+        response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Employee", id },
+        { type: "Employee", id: "LIST" },
+        { type: "Employee", id: "PROBATION_PENDING" },
+      ],
+    }),
+    getContractsNearingEnd: builder.query<EmployeeSummary[], void>({
+      query: () => `/employees/contracts/near-end`,
+      transformResponse: (response: ApiResponse<EmployeeSummary[]>) =>
+        response.data,
+      providesTags: [{ type: "Employee", id: "CONTRACTS_NEAR_END" }],
+    }),
+    getEmployeeAnalytics: builder.query<EmployeeAnalytics, void>({
+      query: () => "/employees/analytics",
+      transformResponse: (res: { data: EmployeeAnalytics }) => res.data,
+    }),
     updatePotentialBonus: builder.mutation<
       EmployeeProfile,
-      { id: string; annual_percentage?: number; annual_amount?: number; annual_amount_currency?: string }
+      {
+        id: string;
+        annual_percentage?: number;
+        annual_amount?: number;
+        annual_amount_currency?: string;
+      }
     >({
       query: ({ id, ...body }) => ({
         url: `/employees/${id}/job/potential-bonus`,
@@ -341,8 +382,9 @@ export const {
   useAddEquityEntryMutation,
   useUpdatePayRatesMutation,
   useUpdatePotentialBonusMutation,
-    useUpdateEmployeeBasicInfoMutation,
-    useGetPendingProbationReviewsQuery,
-    useResolveProbationMutation,
-    useGetContractsNearingEndQuery,
+  useUpdateEmployeeBasicInfoMutation,
+  useGetPendingProbationReviewsQuery,
+  useResolveProbationMutation,
+  useGetContractsNearingEndQuery,
+    useGetEmployeeAnalyticsQuery,
 } = employeeApi;
