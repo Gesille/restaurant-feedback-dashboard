@@ -18,7 +18,7 @@ export default function ReportsPickerPage() {
     <div className="font-['Inter']">
       <LedgerFonts />
       <Topbar />
-      <div className="px-6 py-8">
+      <div className="px-8 py-6">
         <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
           <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-fuchsia-600">
             [ Reports ]
