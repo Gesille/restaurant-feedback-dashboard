@@ -64,10 +64,11 @@ export default function RestaurantReportPage({
   const leadingBlanks = Array.from({ length: firstWeekday });
 
   return (
-   <div className="mx-auto max-w-6xl font-['Inter']">
+    <div className="font-['Inter']">
       <LedgerFonts />
       <Topbar />
-    <div className="px-6 py-9">
+
+      <div className="px-8 py-6">
         <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
           <span className="font-['IBM_Plex_Mono'] text-xs font-semibold uppercase tracking-widest text-fuchsia-600">
             [ Analytics ]
@@ -79,12 +80,9 @@ export default function RestaurantReportPage({
             Daily and monthly breakdowns for this restaurant, with a downloadable PDF summary.
           </p>
         </motion.div>
+      </div>
 
-
-    </div>
-     
- 
-      <div className="flex flex-col gap-6 px-6 pb-10 sm:flex-row">
+      <div className="flex flex-col gap-6 px-8 pb-10 sm:flex-row">
         <RestaurantSidebar activeId={restaurantId} />
 
         <div className="min-w-0 flex-1">
