@@ -21,6 +21,7 @@ import {
   ShieldIcon,
   PercentIcon,
   XIcon,
+  ChevronRightIcon,
 } from "lucide-react";
 import { EmployeeProfile, EmployeeSummary } from "@/types";
 import {
@@ -114,6 +115,7 @@ const TABS: { key: TabKey; label: string; short: string; icon: any; group: strin
   { key: "equity", label: "Equity", short: "Equity", icon: PieChartIcon, group: "Pay" },
   { key: "airportpass", label: "Airport Security Pass", short: "Airport Pass", icon: ShieldIcon, group: "Compliance" },
 ];
+const TAB_GROUPS = ["Profile", "Employment", "Pay", "Compliance"];
 
 export function EmployeeProfileView({
   profile,
@@ -141,29 +143,20 @@ export function EmployeeProfileView({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-return (
+  return (
     <div className="min-h-screen w-full bg-[#F7F6FB]">
-      <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-10">
-        {/* ── Identity banner — full width, across the top ── */}
-        <IdentityBanner profile={profile} jobInfo={jobInfo} status={status} />
-
-        {/* ── Horizontal tab bar — wraps to multiple rows, never scrolls ── */}
-        <nav
-          aria-label="Profile sections"
-          className="mt-6 hidden flex-wrap gap-1 border-b border-[#EAE7F6] lg:flex"
-        >
-          {TABS.map((tab) => (
-            <TopTabLink
-              key={tab.key}
-              tab={tab}
-              active={activeTab === tab.key}
-              onClick={() => selectTab(tab.key)}
-            />
-          ))}
-        </nav>
+      <div className="mx-auto flex w-full max-w-[1280px] items-start gap-6 px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-10">
+        {/* ── Left rail — grouped section index, replaces the old top tab bar ── */}
+        <SidebarNav
+          profile={profile}
+          activeTab={activeTab}
+          onSelect={selectTab}
+        />
 
         {/* ── Main column ─────────────────────────────────────────── */}
-        <div className="mt-6 min-w-0">
+        <div className="min-w-0 flex-1 space-y-6">
+          <IdentityHeader profile={profile} jobInfo={jobInfo} status={status} />
+
           {profile.job_tab.job.probation_pending && (
             <ProbationBanner
               employeeId={profile.id}
@@ -177,9 +170,9 @@ return (
             />
           )}
 
-          {/* Section heading — shown on mobile only, since desktop tabs
-              already label the active section */}
-          <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          {/* Section heading — shown on mobile only, since the sidebar
+              already labels the active section on desktop */}
+          <div className="flex items-center justify-between gap-3 lg:hidden">
             <div className="flex items-center gap-2">
               <activeTabMeta.icon className="size-4 text-[#6C4DF4]" />
               <h2 className="font-['Fraunces'] text-lg italic text-slate-900">
@@ -247,7 +240,7 @@ return (
         </div>
       </div>
 
-      {/* Mobile bottom nav unchanged */}
+      {/* Mobile bottom nav */}
       <MobileBottomNav
         tabs={TABS}
         activeTab={activeTab}
@@ -259,7 +252,73 @@ return (
   );
 }
 
-function IdentityBanner({
+// ── Sidebar — grouped section index, sticky on desktop ─────────────────────
+function SidebarNav({
+  profile,
+  activeTab,
+  onSelect,
+}: {
+  profile: EmployeeProfile;
+  activeTab: TabKey;
+  onSelect: (key: TabKey) => void;
+}) {
+  return (
+    <aside className="hidden w-64 shrink-0 lg:block">
+      <div className="sticky top-6 overflow-hidden rounded-2xl border border-[#EAE7F6] bg-white shadow-[0_1px_2px_rgba(23,15,60,0.04)]">
+        <div className="flex items-center gap-3 border-b border-[#EAE7F6] px-4 py-4">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F1EDFF] font-['Fraunces'] text-sm italic text-[#6C4DF4]">
+            {initials(profile.full_name)}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-800">
+              {profile.full_name}
+            </p>
+            <p className="truncate font-['IBM_Plex_Mono'] text-[10px] uppercase tracking-wide text-slate-400">
+              #{profile.vitals.employee_number || "—"}
+            </p>
+          </div>
+        </div>
+        <nav aria-label="Profile sections" className="px-2 py-3">
+          {TAB_GROUPS.map((group) => (
+            <div key={group} className="mb-1 last:mb-0">
+              <p className="px-3 pb-1.5 pt-3 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                {group}
+              </p>
+              {TABS.filter((t) => t.group === group).map((tab) => {
+                const Icon = tab.icon;
+                const active = tab.key === activeTab;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => onSelect(tab.key)}
+                    aria-current={active ? "page" : undefined}
+                    className={`relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors ${
+                      active
+                        ? "bg-[#F1EDFF] text-[#6C4DF4]"
+                        : "text-slate-500 hover:bg-[#FBFAFF] hover:text-slate-800"
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-[#6C4DF4]" />
+                    )}
+                    <Icon
+                      className={`size-3.5 shrink-0 ${active ? "text-[#6C4DF4]" : "text-slate-400"}`}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+      </div>
+    </aside>
+  );
+}
+
+// ── Identity header — compact letterhead-style summary, no top banner ──────
+function IdentityHeader({
   profile,
   jobInfo,
   status,
@@ -270,116 +329,135 @@ function IdentityBanner({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[#EAE7F6] bg-white shadow-[0_1px_2px_rgba(23,15,60,0.04)]">
-      <div className="h-16 bg-gradient-to-r from-[#6C4DF4] to-[#8F7BFA]" />
-      <div className="flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-5">
-        <div className="-mt-10 flex size-20 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
-          {initials(profile.full_name)}
-        </div>
-        <div className="min-w-0 flex-1 pt-1 sm:pt-0">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <p className="font-['Fraunces'] text-xl italic text-slate-900">
-              {profile.full_name}
-            </p>
-            {status?.employment_status && (
-              <span
-                className={`rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
-                  STATUS_STYLES[status.employment_status] || "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {status.employment_status}
-              </span>
-            )}
+      <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#F1EDFF] font-['Fraunces'] text-xl italic text-[#6C4DF4]">
+            {initials(profile.full_name)}
           </div>
-          <p className="mt-0.5 text-sm text-slate-500">{jobInfo?.job_title || "—"}</p>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <p className="font-['Fraunces'] text-xl italic text-slate-900">
+                {profile.full_name}
+              </p>
+              {status?.employment_status && (
+                <span
+                  className={`rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
+                    STATUS_STYLES[status.employment_status] || "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {status.employment_status}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 truncate text-sm text-slate-500">
+              {jobInfo?.job_title || "—"}
+              {jobInfo?.department ? ` · ${jobInfo.department}` : ""}
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Compact vitals row — replaces the old sidebar list */}
-        <div className="grid w-full grid-cols-2 gap-x-6 gap-y-3 border-t border-[#EDEBF7] pt-4 sm:mt-0 sm:w-auto sm:grid-cols-3 sm:border-0 sm:pt-0">
-          <SideRow icon={HashIcon} label="Employee #" value={profile.vitals.employee_number} />
-          <SideRow icon={MailIcon} label="Work Email" value={profile.vitals.work_email} />
-          <SideRow icon={PhoneIcon} label="Work Phone" value={profile.vitals.work_phone} />
-          <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
-          <SideRow icon={BriefcaseIcon} label="Department" value={jobInfo?.department} />
-          <SideRow
-            icon={CalendarClockIcon}
-            label="Hire Date"
-            value={
-              profile.job_tab.job.hire_date
-                ? new Date(profile.job_tab.job.hire_date).toLocaleDateString()
-                : undefined
-            }
-          />
-        </div>
+      {/* Vitals strip — divided columns instead of a floating card grid */}
+      <div className="grid grid-cols-2 divide-y divide-[#EDEBF7] border-t border-[#EAE7F6] sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-6">
+        <VitalCell icon={HashIcon} label="Employee #" value={profile.vitals.employee_number} />
+        <VitalCell icon={MailIcon} label="Work Email" value={profile.vitals.work_email} />
+        <VitalCell icon={PhoneIcon} label="Work Phone" value={profile.vitals.work_phone} />
+        <VitalCell icon={MapPinIcon} label="Location" value={jobInfo?.location} />
+        <VitalCell icon={BriefcaseIcon} label="Department" value={jobInfo?.department} />
+        <VitalCell
+          icon={CalendarClockIcon}
+          label="Hire Date"
+          value={
+            profile.job_tab.job.hire_date
+              ? new Date(profile.job_tab.job.hire_date).toLocaleDateString()
+              : undefined
+          }
+          last
+        />
       </div>
     </div>
   );
 }
-function FieldGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {children}
-    </div>
-  );
-}
 
-function FieldCard({
+// Header vitals cell — sits in a divided strip under the identity header.
+function VitalCell({
   icon: Icon,
   label,
   value,
-  span,
+  last,
 }: {
-  icon?: any;
+  icon: any;
   label: string;
   value?: string;
-  span?: boolean; // stretch across 2 columns for long values (e.g. address)
+  last?: boolean;
 }) {
   return (
     <div
-      className={`min-w-0 rounded-xl border border-[#EDEBF7] bg-[#FBFAFF] px-4 py-3 transition-colors hover:border-[#DCD5F7] ${
-        span ? "sm:col-span-2 lg:col-span-3" : ""
+      className={`flex items-start gap-2 px-5 py-3.5 sm:border-l sm:border-[#EDEBF7] sm:first:border-l-0 ${
+        last ? "" : ""
       }`}
     >
-      <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">
-        {Icon && <Icon className="size-3 shrink-0 text-slate-400" />}
-        <span className="truncate">{label}</span>
+      <Icon className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
+      <div className="min-w-0">
+        <p className="font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          {label}
+        </p>
+        <p className="truncate text-sm text-slate-700">{value || "—"}</p>
       </div>
-      <p className="mt-1 break-words text-sm font-medium text-slate-800">
-        {value || "—"}
-      </p>
     </div>
   );
 }
-function TopTabLink({
-  tab,
-  active,
-  onClick,
+
+// ── Shared section chrome ───────────────────────────────────────────────
+// Header row for a read-only panel: optional group caption on the left,
+// action (Edit / Add entry) on the right. Replaces the old floating-card
+// grid so every section reads as one consistent record sheet.
+function PanelHeader({
+  caption,
+  action,
 }: {
-  tab: { key: TabKey; label: string; icon: any };
-  active: boolean;
-  onClick: () => void;
+  caption?: string;
+  action?: React.ReactNode;
 }) {
-  const Icon = tab.icon;
+  if (!caption && !action) return null;
+  return (
+    <div className="mb-1 flex items-center justify-between gap-3">
+      {caption ? (
+        <p className="font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          {caption}
+        </p>
+      ) : (
+        <span />
+      )}
+      {action}
+    </div>
+  );
+}
+
+function EditLink({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-current={active ? "page" : undefined}
-      className={`group relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[13px] font-medium transition-colors ${
-        active ? "text-[#6C4DF4]" : "text-slate-500 hover:text-slate-800"
-      }`}
+      className="text-xs font-semibold text-[#6C4DF4] hover:underline"
     >
-      <Icon
-        className={`size-3.5 shrink-0 ${active ? "text-[#6C4DF4]" : "text-slate-400 group-hover:text-slate-500"}`}
-      />
-      {tab.label}
-      <span
-        className={`absolute inset-x-0 -bottom-px h-[2px] rounded-full transition-colors ${
-          active ? "bg-[#6C4DF4]" : "bg-transparent"
-        }`}
-      />
+      Edit
     </button>
   );
 }
+
+function AddEntryLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+    >
+      <PlusIcon className="size-3.5" /> Add entry
+    </button>
+  );
+}
+
 // ── Mobile bottom nav: fixed pill trigger + slide-up sheet ─────────────────
 function MobileBottomNav({
   tabs,
@@ -388,7 +466,7 @@ function MobileBottomNav({
   open,
   onOpenChange,
 }: {
-  tabs: { key: TabKey; label: string; short: string; icon: any }[];
+  tabs: { key: TabKey; label: string; short: string; icon: any; group: string }[];
   activeTab: TabKey;
   onSelect: (key: TabKey) => void;
   open: boolean;
@@ -442,7 +520,7 @@ function MobileBottomNav({
         />
       )}
 
-      {/* Sheet */}
+      {/* Sheet — grouped, same grouping as the desktop sidebar */}
       <div
         ref={sheetRef}
         role="dialog"
@@ -469,65 +547,54 @@ function MobileBottomNav({
           </button>
         </div>
         <div className="max-h-[calc(75vh-4.5rem)] overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = tab.key === activeTab;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => onSelect(tab.key)}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-sm font-medium transition ${
-                  active
-                    ? "bg-[#F1EDFF] text-[#6C4DF4]"
-                    : "text-slate-600 active:bg-slate-50"
-                }`}
-              >
-                <span
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
-                    active ? "bg-[#6C4DF4] text-white" : "bg-slate-100 text-slate-400"
-                  }`}
-                >
-                  <Icon className="size-4" />
-                </span>
-                <span className="flex-1">{tab.label}</span>
-                {active && (
-                  <span className="size-1.5 shrink-0 rounded-full bg-[#6C4DF4]" />
-                )}
-              </button>
-            );
-          })}
+          {TAB_GROUPS.map((group) => (
+            <div key={group} className="mb-1 last:mb-0">
+              <p className="px-4 pb-1 pt-3 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                {group}
+              </p>
+              {tabs
+                .filter((t) => t.group === group)
+                .map((tab) => {
+                  const Icon = tab.icon;
+                  const active = tab.key === activeTab;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => onSelect(tab.key)}
+                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition ${
+                        active
+                          ? "bg-[#F1EDFF] text-[#6C4DF4]"
+                          : "text-slate-600 active:bg-slate-50"
+                      }`}
+                    >
+                      <span
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
+                          active ? "bg-[#6C4DF4] text-white" : "bg-slate-100 text-slate-400"
+                        }`}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <span className="flex-1">{tab.label}</span>
+                      {active ? (
+                        <span className="size-1.5 shrink-0 rounded-full bg-[#6C4DF4]" />
+                      ) : (
+                        <ChevronRightIcon className="size-4 shrink-0 text-slate-300" />
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function SideRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: any;
-  label: string;
-  value?: string;
-}) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <Icon className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
-      <div className="min-w-0">
-        <p className="font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">
-          {label}
-        </p>
-        <p className="truncate text-sm text-slate-700">{value || "—"}</p>
-      </div>
-    </div>
-  );
-}
-
 // Full-width stacked row: label on the left, value on the right, one field
-// per line. Used for read-only section views so values never crowd or run
-// into each other, no matter how long they are.
+// per line. Used across every section so values never crowd or run into
+// each other, no matter how long they are, and every panel reads the same.
 function InfoRow({
   icon: Icon,
   label,
@@ -538,8 +605,8 @@ function InfoRow({
   value?: string;
 }) {
   return (
-    <div className="flex items-start gap-6 py-3.5 first:pt-0 last:pb-0">
-      <div className="flex w-44 shrink-0 items-center gap-2 pt-0.5 font-['IBM_Plex_Mono'] text-[11px] font-medium uppercase tracking-wide text-slate-400">
+    <div className="flex items-start gap-6 py-3 first:pt-0 last:pb-0">
+      <div className="flex w-40 shrink-0 items-center gap-2 pt-0.5 font-['IBM_Plex_Mono'] text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:w-48">
         {Icon && <Icon className="size-3.5 shrink-0 text-slate-400" />}
         <span>{label}</span>
       </div>
@@ -560,7 +627,7 @@ function ProbationBanner({
   const [resolve, { isLoading }] = useResolveProbationMutation();
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
       <div>
         <p className="font-['Fraunces'] italic text-amber-900">
           Probation ended{" "}
@@ -607,7 +674,7 @@ function ContractEndBanner({
     : { border: "border-amber-200", bg: "bg-amber-50", title: "text-amber-900", body: "text-amber-700" };
 
   return (
-    <div className={`mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border ${tone.border} ${tone.bg} px-5 py-4`}>
+    <div className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border ${tone.border} ${tone.bg} px-5 py-4`}>
       <div>
         <p className={`font-['Fraunces'] italic ${tone.title}`}>
           {isPast ? "Contract ended" : "Contract ending"}{" "}
@@ -627,6 +694,7 @@ function ContractEndBanner({
     </div>
   );
 }
+
 // ── Personal / Address / Contact / Access — all editable in place ────────
 function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
   const [editing, setEditing] = useState(false);
@@ -710,38 +778,55 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
     }
   };
 
- if (!editing) {
+  if (!editing) {
+    const address = [v.street1, v.street2, v.city, v.province, v.postal_code, v.country]
+      .filter(Boolean)
+      .join(", ");
     return (
       <FormSection title="Personal & Contact">
-        <div className="mb-4 flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            Edit
-          </button>
+        <div className="space-y-6">
+          <div>
+            <PanelHeader caption="Personal" action={<EditLink onClick={() => setEditing(true)} />} />
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow label="Name" value={profile.full_name} />
+              <InfoRow label="Preferred Name" value={v.preferred_name} />
+              <InfoRow
+                label="Birth Date"
+                value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined}
+              />
+              <InfoRow label="Gender" value={v.gender} />
+              <InfoRow label="Marital Status" value={v.marital_status} />
+            </div>
+          </div>
+
+          <div>
+            <PanelHeader caption="Address" />
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow label="Address" value={address || v.address} />
+            </div>
+          </div>
+
+          <div>
+            <PanelHeader caption="Contact" />
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow icon={MailIcon} label="Work Email" value={v.work_email} />
+              <InfoRow label="Home Email" value={v.home_email} />
+              <InfoRow icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
+              <InfoRow label="Mobile" value={v.mobile_phone} />
+              <InfoRow label="Home Phone" value={v.home_phone} />
+            </div>
+          </div>
+
+          <div>
+            <PanelHeader caption="Access" />
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow
+                label="Self-service access"
+                value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"}
+              />
+            </div>
+          </div>
         </div>
-        <FieldGrid>
-          <FieldCard label="Name" value={profile.full_name} />
-          <FieldCard label="Preferred Name" value={v.preferred_name} />
-          <FieldCard
-            label="Birth Date"
-            value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined}
-          />
-          <FieldCard label="Gender" value={v.gender} />
-          <FieldCard label="Marital Status" value={v.marital_status} />
-          <FieldCard label="Address" value={v.address} span />
-          <FieldCard icon={MailIcon} label="Work Email" value={v.work_email} />
-          <FieldCard label="Home Email" value={v.home_email} />
-          <FieldCard icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
-          <FieldCard label="Mobile" value={v.mobile_phone} />
-          <FieldCard label="Home Phone" value={v.home_phone} />
-          <FieldCard
-            label="Self-service access"
-            value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"}
-          />
-        </FieldGrid>
       </FormSection>
     );
   }
@@ -1050,25 +1135,17 @@ function JobCoreSection({
 
   return (
     <FormSection title="Job">
-     {!editing ? (
-        <>
-          <div className="mb-4 flex items-center justify-end">
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="text-xs font-semibold text-[#6C4DF4] hover:underline"
-            >
-              Edit
-            </button>
-          </div>
-          <FieldGrid>
-            <FieldCard
+      {!editing ? (
+        <div>
+          <PanelHeader action={<EditLink onClick={() => setEditing(true)} />} />
+          <div className="divide-y divide-[#EDEBF7]">
+            <InfoRow
               label="Hire Date"
               value={job.hire_date ? new Date(job.hire_date).toLocaleDateString() : undefined}
             />
-            <FieldCard label="Job Code" value={job.job_code} />
-            <FieldCard label="Direct Reports" value={String(job.direct_reports_count)} />
-            <FieldCard
+            <InfoRow label="Job Code" value={job.job_code} />
+            <InfoRow label="Direct Reports" value={String(job.direct_reports_count)} />
+            <InfoRow
               label="Probation End"
               value={
                 job.probation_end_date
@@ -1077,7 +1154,7 @@ function JobCoreSection({
               }
             />
             {showContractEnd && (
-              <FieldCard
+              <InfoRow
                 label="Contract End"
                 value={
                   job.contract_end_date
@@ -1086,8 +1163,8 @@ function JobCoreSection({
                 }
               />
             )}
-          </FieldGrid>
-        </>
+          </div>
+        </div>
       ) : (
         // ...editing form stays exactly as-is
         <div className="space-y-4">
@@ -1239,19 +1316,9 @@ function EmploymentStatusSection({
 
   return (
     <FormSection title="Employment Status">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <InfoRow label="Current Status" value={current?.employment_status} />
-        </div>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      <div className="divide-y divide-[#EDEBF7]">
+        <InfoRow label="Current Status" value={current?.employment_status} />
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1356,30 +1423,12 @@ function JobInformationSection({
 
   return (
     <FormSection title="Job Information">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-          <InfoRow label="Job Title" value={current?.job_title} />
-          <InfoRow label="Department" value={current?.department} />
-          <InfoRow label="Division" value={current?.division} />
-          <InfoRow label="Location" value={current?.location} />
-        </div>
-        <div className="mb-4 flex items-center justify-end">
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
-      <FieldGrid>
-        <FieldCard label="Job Title" value={current?.job_title} />
-        <FieldCard label="Department" value={current?.department} />
-        <FieldCard label="Division" value={current?.division} />
-        <FieldCard label="Location" value={current?.location} />
-      </FieldGrid>
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      <div className="divide-y divide-[#EDEBF7]">
+        <InfoRow label="Job Title" value={current?.job_title} />
+        <InfoRow label="Department" value={current?.department} />
+        <InfoRow label="Division" value={current?.division} />
+        <InfoRow label="Location" value={current?.location} />
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1502,33 +1551,10 @@ function CompensationSection({
 
   return (
     <FormSection title="Compensation">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-          <InfoRow label="Pay Type" value={current?.pay_type} />
-          <InfoRow
-            label="Rate"
-            value={
-              current
-                ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}`
-                : undefined
-            }
-          />
-          <InfoRow label="Schedule" value={current?.pay_schedule} />
-        </div>
-       <div className="mb-4 flex items-center justify-end">
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
-      <FieldGrid>
-        <FieldCard label="Pay Type" value={current?.pay_type} />
-        <FieldCard
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      <div className="divide-y divide-[#EDEBF7]">
+        <InfoRow label="Pay Type" value={current?.pay_type} />
+        <InfoRow
           label="Rate"
           value={
             current
@@ -1536,8 +1562,7 @@ function CompensationSection({
               : undefined
           }
         />
-        <FieldCard label="Schedule" value={current?.pay_schedule} />
-      </FieldGrid>
+        <InfoRow label="Schedule" value={current?.pay_schedule} />
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1700,40 +1725,19 @@ function AllowancesSection({
 
   return (
     <FormSection title="Allowances">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-          {rows.map(([label, value]) => (
-            <InfoRow
-              key={label}
-              label={label}
-              value={
-                value !== undefined
-                  ? `${value} ${current?.currency || ""}`.trim()
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-     <div className="mb-4 flex items-center justify-end">
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
-      <FieldGrid>
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      <div className="divide-y divide-[#EDEBF7]">
         {rows.map(([label, value]) => (
-          <FieldCard
+          <InfoRow
             key={label}
             label={label}
-            value={value !== undefined ? `${value} ${current?.currency || ""}`.trim() : undefined}
+            value={
+              value !== undefined
+                ? `${value} ${current?.currency || ""}`.trim()
+                : undefined
+            }
           />
         ))}
-      </FieldGrid>
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1842,23 +1846,19 @@ function PayRatesSection({
   return (
     <div className="space-y-6">
       <FormSection title="Pay Rates">
-       {!editingRates ? (
-          <>
-            <div className="mb-4 flex items-center justify-end">
-              <button type="button" onClick={() => setEditingRates(true)} className="text-xs font-semibold text-[#6C4DF4] hover:underline">
-                Edit
-              </button>
-            </div>
-            <FieldGrid>
-              <FieldCard label="Daily" value={payRates?.daily !== undefined ? String(payRates.daily) : undefined} />
-              <FieldCard label="Holiday" value={payRates?.holiday !== undefined ? String(payRates.holiday) : undefined} />
-              <FieldCard label="Sick" value={payRates?.sick !== undefined ? String(payRates.sick) : undefined} />
-              <FieldCard
+        {!editingRates ? (
+          <div>
+            <PanelHeader action={<EditLink onClick={() => setEditingRates(true)} />} />
+            <div className="divide-y divide-[#EDEBF7]">
+              <InfoRow label="Daily" value={payRates?.daily !== undefined ? String(payRates.daily) : undefined} />
+              <InfoRow label="Holiday" value={payRates?.holiday !== undefined ? String(payRates.holiday) : undefined} />
+              <InfoRow label="Sick" value={payRates?.sick !== undefined ? String(payRates.sick) : undefined} />
+              <InfoRow
                 label="Vacation Pay in Lieu"
                 value={payRates?.vacation_pay_in_lieu_rate !== undefined ? String(payRates.vacation_pay_in_lieu_rate) : undefined}
               />
-            </FieldGrid>
-          </>
+            </div>
+          </div>
         ) : (
           // ...editing form unchanged
           <div className="space-y-4">
@@ -1883,8 +1883,9 @@ function PayRatesSection({
 
       <FormSection title="Potential Bonus">
         {!editingBonus ? (
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
+          <div>
+            <PanelHeader action={<EditLink onClick={() => setEditingBonus(true)} />} />
+            <div className="divide-y divide-[#EDEBF7]">
               <InfoRow
                 label="Annual %"
                 value={
@@ -1902,13 +1903,6 @@ function PayRatesSection({
                 }
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setEditingBonus(true)}
-              className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
-            >
-              Edit
-            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -1965,32 +1959,20 @@ function BonusSection({
 
   return (
     <FormSection title="Bonus">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {history.length === 0 ? (
-            <p className="text-sm text-slate-400">No bonus entries yet.</p>
-          ) : (
-            <div className="divide-y divide-[#EDEBF7]">
-              {history.map((b: any, i: number) => (
-                <InfoRow
-                  key={b._id || i}
-                  label={new Date(b.date).toLocaleDateString()}
-                  value={`${b.amount}${b.reason ? ` — ${b.reason}` : ""}`}
-                />
-              ))}
-            </div>
-          )}
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      {history.length === 0 ? (
+        <p className="text-sm text-slate-400">No bonus entries yet.</p>
+      ) : (
+        <div className="divide-y divide-[#EDEBF7]">
+          {history.map((b: any, i: number) => (
+            <InfoRow
+              key={b._id || i}
+              label={new Date(b.date).toLocaleDateString()}
+              value={`${b.amount}${b.reason ? ` — ${b.reason}` : ""}`}
+            />
+          ))}
         </div>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
+      )}
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -2043,32 +2025,20 @@ function CommissionSection({
 
   return (
     <FormSection title="Commission">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {history.length === 0 ? (
-            <p className="text-sm text-slate-400">No commission entries yet.</p>
-          ) : (
-            <div className="divide-y divide-[#EDEBF7]">
-              {history.map((c: any, i: number) => (
-                <InfoRow
-                  key={c._id || i}
-                  label={new Date(c.date).toLocaleDateString()}
-                  value={String(c.amount)}
-                />
-              ))}
-            </div>
-          )}
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      {history.length === 0 ? (
+        <p className="text-sm text-slate-400">No commission entries yet.</p>
+      ) : (
+        <div className="divide-y divide-[#EDEBF7]">
+          {history.map((c: any, i: number) => (
+            <InfoRow
+              key={c._id || i}
+              label={new Date(c.date).toLocaleDateString()}
+              value={String(c.amount)}
+            />
+          ))}
         </div>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
+      )}
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -2142,38 +2112,26 @@ function EquitySection({
 
   return (
     <FormSection title="Equity">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {history.length === 0 ? (
-            <p className="text-sm text-slate-400">No equity grants yet.</p>
-          ) : (
-            <div className="divide-y divide-[#EDEBF7]">
-              {history.map((eq: any, i: number) => (
-                <InfoRow
-                  key={eq._id || i}
-                  label={`${eq.grant_type}${
-                    eq.grant_type === "Other" && eq.custom_grant_type_name
-                      ? ` (${eq.custom_grant_type_name})`
-                      : ""
-                  } — ${new Date(eq.grant_date).toLocaleDateString()}`}
-                  value={`${eq.equity_granted} units${
-                    eq.strike_price ? ` @ ${eq.strike_price} strike` : ""
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      {history.length === 0 ? (
+        <p className="text-sm text-slate-400">No equity grants yet.</p>
+      ) : (
+        <div className="divide-y divide-[#EDEBF7]">
+          {history.map((eq: any, i: number) => (
+            <InfoRow
+              key={eq._id || i}
+              label={`${eq.grant_type}${
+                eq.grant_type === "Other" && eq.custom_grant_type_name
+                  ? ` (${eq.custom_grant_type_name})`
+                  : ""
+              } — ${new Date(eq.grant_date).toLocaleDateString()}`}
+              value={`${eq.equity_granted} units${
+                eq.strike_price ? ` @ ${eq.strike_price} strike` : ""
+              }`}
+            />
+          ))}
         </div>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
+      )}
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -2246,33 +2204,21 @@ function AirportPassSection({
 
   return (
     <FormSection title="Airport Security Pass">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {mostRecent ? (
-            <div className="divide-y divide-[#EDEBF7]">
-              <InfoRow label="Issue Date" value={new Date(mostRecent.issue_date).toLocaleDateString()} />
-              <InfoRow label="Expiration Date" value={new Date(mostRecent.expiration_date).toLocaleDateString()} />
-              <InfoRow label="Comments" value={mostRecent.comments} />
-              {isExpired && (
-                <p className="pt-3 text-xs font-semibold text-red-600">
-                  This pass has expired.
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400">No airport security pass on file.</p>
+      <PanelHeader action={!adding && <AddEntryLink onClick={() => setAdding(true)} />} />
+      {mostRecent ? (
+        <div className="divide-y divide-[#EDEBF7]">
+          <InfoRow label="Issue Date" value={new Date(mostRecent.issue_date).toLocaleDateString()} />
+          <InfoRow label="Expiration Date" value={new Date(mostRecent.expiration_date).toLocaleDateString()} />
+          <InfoRow label="Comments" value={mostRecent.comments} />
+          {isExpired && (
+            <p className="pt-3 text-xs font-semibold text-red-600">
+              This pass has expired.
+            </p>
           )}
         </div>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            <PlusIcon className="size-3.5" /> Add entry
-          </button>
-        )}
-      </div>
+      ) : (
+        <p className="text-sm text-slate-400">No airport security pass on file.</p>
+      )}
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
           <div className="grid grid-cols-2 gap-4">
