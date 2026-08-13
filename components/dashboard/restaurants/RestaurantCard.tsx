@@ -70,7 +70,7 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
           </div>
           <div className="min-w-0">
           <Link
-  href={`/restaurant/${r.id}`}
+  href={`/restaurants/${r.id}`}
   className="block min-w-0"
 >
   <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900 hover:opacity-70">
