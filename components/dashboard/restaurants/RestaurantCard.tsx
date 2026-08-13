@@ -7,7 +7,6 @@ import {
   ArrowDown,
   Loader2,
   X,
-  Link,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
@@ -69,14 +68,9 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
             {r.name.charAt(0)}
           </div>
           <div className="min-w-0">
-           <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900">
-  <Link
-    href={`/restaurant/${r.id}`}
-    className="transition-opacity hover:opacity-70"
-  >
-    {r.name}
-  </Link>
-</h3>
+            <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900">
+              {r.name}
+            </h3>
           </div>
         </div>
 
