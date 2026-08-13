@@ -314,6 +314,41 @@ function IdentityBanner({
     </div>
   );
 }
+function FieldGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {children}
+    </div>
+  );
+}
+
+function FieldCard({
+  icon: Icon,
+  label,
+  value,
+  span,
+}: {
+  icon?: any;
+  label: string;
+  value?: string;
+  span?: boolean; // stretch across 2 columns for long values (e.g. address)
+}) {
+  return (
+    <div
+      className={`min-w-0 rounded-xl border border-[#EDEBF7] bg-[#FBFAFF] px-4 py-3 transition-colors hover:border-[#DCD5F7] ${
+        span ? "sm:col-span-2 lg:col-span-3" : ""
+      }`}
+    >
+      <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono'] text-[10px] font-medium uppercase tracking-wide text-slate-400">
+        {Icon && <Icon className="size-3 shrink-0 text-slate-400" />}
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-1 break-words text-sm font-medium text-slate-800">
+        {value || "—"}
+      </p>
+    </div>
+  );
+}
 function TopTabLink({
   tab,
   active,
@@ -675,46 +710,38 @@ function BasicInfoSection({ profile }: { profile: EmployeeProfile }) {
     }
   };
 
-  if (!editing) {
+ if (!editing) {
     return (
       <FormSection title="Personal & Contact">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-            <InfoRow label="Name" value={profile.full_name} />
-            <InfoRow label="Preferred Name" value={v.preferred_name} />
-            <InfoRow
-              label="Birth Date"
-              value={
-                v.birth_date
-                  ? new Date(v.birth_date).toLocaleDateString()
-                  : undefined
-              }
-            />
-            <InfoRow label="Gender" value={v.gender} />
-            <InfoRow label="Marital Status" value={v.marital_status} />
-            <InfoRow label="Address" value={v.address} />
-            <InfoRow icon={MailIcon} label="Work Email" value={v.work_email} />
-            <InfoRow label="Home Email" value={v.home_email} />
-            <InfoRow icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
-            <InfoRow label="Mobile" value={v.mobile_phone} />
-            <InfoRow label="Home Phone" value={v.home_phone} />
-            <InfoRow
-              label="Self-service access"
-              value={
-                v.self_service_access === "full_access"
-                  ? "Allow Access"
-                  : "No Access"
-              }
-            />
-          </div>
+        <div className="mb-4 flex items-center justify-end">
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            className="text-xs font-semibold text-[#6C4DF4] hover:underline"
           >
             Edit
           </button>
         </div>
+        <FieldGrid>
+          <FieldCard label="Name" value={profile.full_name} />
+          <FieldCard label="Preferred Name" value={v.preferred_name} />
+          <FieldCard
+            label="Birth Date"
+            value={v.birth_date ? new Date(v.birth_date).toLocaleDateString() : undefined}
+          />
+          <FieldCard label="Gender" value={v.gender} />
+          <FieldCard label="Marital Status" value={v.marital_status} />
+          <FieldCard label="Address" value={v.address} span />
+          <FieldCard icon={MailIcon} label="Work Email" value={v.work_email} />
+          <FieldCard label="Home Email" value={v.home_email} />
+          <FieldCard icon={PhoneIcon} label="Work Phone" value={v.work_phone} />
+          <FieldCard label="Mobile" value={v.mobile_phone} />
+          <FieldCard label="Home Phone" value={v.home_phone} />
+          <FieldCard
+            label="Self-service access"
+            value={v.self_service_access === "full_access" ? "Allow Access" : "No Access"}
+          />
+        </FieldGrid>
       </FormSection>
     );
   }
@@ -1023,23 +1050,25 @@ function JobCoreSection({
 
   return (
     <FormSection title="Job">
-      {!editing ? (
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-            <InfoRow
+     {!editing ? (
+        <>
+          <div className="mb-4 flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-xs font-semibold text-[#6C4DF4] hover:underline"
+            >
+              Edit
+            </button>
+          </div>
+          <FieldGrid>
+            <FieldCard
               label="Hire Date"
-              value={
-                job.hire_date
-                  ? new Date(job.hire_date).toLocaleDateString()
-                  : undefined
-              }
+              value={job.hire_date ? new Date(job.hire_date).toLocaleDateString() : undefined}
             />
-            <InfoRow label="Job Code" value={job.job_code} />
-            <InfoRow
-              label="Direct Reports"
-              value={String(job.direct_reports_count)}
-            />
-            <InfoRow
+            <FieldCard label="Job Code" value={job.job_code} />
+            <FieldCard label="Direct Reports" value={String(job.direct_reports_count)} />
+            <FieldCard
               label="Probation End"
               value={
                 job.probation_end_date
@@ -1048,7 +1077,7 @@ function JobCoreSection({
               }
             />
             {showContractEnd && (
-              <InfoRow
+              <FieldCard
                 label="Contract End"
                 value={
                   job.contract_end_date
@@ -1057,16 +1086,10 @@ function JobCoreSection({
                 }
               />
             )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
-          >
-            Edit
-          </button>
-        </div>
+          </FieldGrid>
+        </>
       ) : (
+        // ...editing form stays exactly as-is
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Hire Date">
@@ -1340,15 +1363,23 @@ function JobInformationSection({
           <InfoRow label="Division" value={current?.division} />
           <InfoRow label="Location" value={current?.location} />
         </div>
+        <div className="mb-4 flex items-center justify-end">
         {!adding && (
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
           >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
+      </div>
+      <FieldGrid>
+        <FieldCard label="Job Title" value={current?.job_title} />
+        <FieldCard label="Department" value={current?.department} />
+        <FieldCard label="Division" value={current?.division} />
+        <FieldCard label="Location" value={current?.location} />
+      </FieldGrid>
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1484,15 +1515,29 @@ function CompensationSection({
           />
           <InfoRow label="Schedule" value={current?.pay_schedule} />
         </div>
+       <div className="mb-4 flex items-center justify-end">
         {!adding && (
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
           >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
+      </div>
+      <FieldGrid>
+        <FieldCard label="Pay Type" value={current?.pay_type} />
+        <FieldCard
+          label="Rate"
+          value={
+            current
+              ? `${current.pay_rate_amount} ${current.pay_rate_currency} / ${current.pay_rate_per}`
+              : undefined
+          }
+        />
+        <FieldCard label="Schedule" value={current?.pay_schedule} />
+      </FieldGrid>
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1669,15 +1714,26 @@ function AllowancesSection({
             />
           ))}
         </div>
+     <div className="mb-4 flex items-center justify-end">
         {!adding && (
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
+            className="flex items-center gap-1 text-xs font-semibold text-[#6C4DF4] hover:underline"
           >
             <PlusIcon className="size-3.5" /> Add entry
           </button>
         )}
+      </div>
+      <FieldGrid>
+        {rows.map(([label, value]) => (
+          <FieldCard
+            key={label}
+            label={label}
+            value={value !== undefined ? `${value} ${current?.currency || ""}`.trim() : undefined}
+          />
+        ))}
+      </FieldGrid>
       </div>
       {adding && (
         <div className="mt-4 space-y-4 border-t border-[#EDEBF7] pt-4">
@@ -1786,30 +1842,25 @@ function PayRatesSection({
   return (
     <div className="space-y-6">
       <FormSection title="Pay Rates">
-        {!editingRates ? (
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1 divide-y divide-[#EDEBF7]">
-              <InfoRow label="Daily" value={payRates?.daily !== undefined ? String(payRates.daily) : undefined} />
-              <InfoRow label="Holiday" value={payRates?.holiday !== undefined ? String(payRates.holiday) : undefined} />
-              <InfoRow label="Sick" value={payRates?.sick !== undefined ? String(payRates.sick) : undefined} />
-              <InfoRow
-                label="Vacation Pay in Lieu"
-                value={
-                  payRates?.vacation_pay_in_lieu_rate !== undefined
-                    ? String(payRates.vacation_pay_in_lieu_rate)
-                    : undefined
-                }
-              />
+       {!editingRates ? (
+          <>
+            <div className="mb-4 flex items-center justify-end">
+              <button type="button" onClick={() => setEditingRates(true)} className="text-xs font-semibold text-[#6C4DF4] hover:underline">
+                Edit
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setEditingRates(true)}
-              className="shrink-0 text-xs font-semibold text-[#6C4DF4] hover:underline"
-            >
-              Edit
-            </button>
-          </div>
+            <FieldGrid>
+              <FieldCard label="Daily" value={payRates?.daily !== undefined ? String(payRates.daily) : undefined} />
+              <FieldCard label="Holiday" value={payRates?.holiday !== undefined ? String(payRates.holiday) : undefined} />
+              <FieldCard label="Sick" value={payRates?.sick !== undefined ? String(payRates.sick) : undefined} />
+              <FieldCard
+                label="Vacation Pay in Lieu"
+                value={payRates?.vacation_pay_in_lieu_rate !== undefined ? String(payRates.vacation_pay_in_lieu_rate) : undefined}
+              />
+            </FieldGrid>
+          </>
         ) : (
+          // ...editing form unchanged
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Daily"><input type="number" value={ratesForm.daily} onChange={setRate("daily")} className={inputCls} /></FormField>
