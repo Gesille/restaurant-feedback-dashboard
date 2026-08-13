@@ -7,7 +7,6 @@ import {
   ArrowDown,
   Loader2,
   X,
-  Link,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
@@ -60,18 +59,19 @@ export function RestaurantCard({ r }: { r: IRestaurant }) {
             <span className="text-amber-500">★</span> {r.avgRating ?? 0}
           </span>
         </div>
-<div className="flex items-center gap-3 px-5 pb-4 pt-3">
+
+        <div className="flex items-center gap-3 px-5 pb-4 pt-3">
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-['Fraunces'] text-lg italic text-white"
             style={{ backgroundColor: c.solid }}
           >
             {r.name.charAt(0)}
           </div>
-          <Link href={`/restaurants/${r.id}`} className="min-w-0 group">
-            <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900 transition-colors group-hover:text-slate-600">
+          <div className="min-w-0">
+            <h3 className="truncate font-['Fraunces'] text-lg italic leading-tight text-slate-900">
               {r.name}
             </h3>
-          </Link>
+          </div>
         </div>
 
         <div className="px-5 pb-4">
