@@ -101,18 +101,18 @@ type TabKey =
   | "equity"
   | "airportpass";
 
-const TABS: { key: TabKey; label: string; short: string; icon: any }[] = [
-  { key: "personal", label: "Personal & Contact", short: "Personal", icon: UserIcon },
-  { key: "job", label: "Job", short: "Job", icon: BriefcaseIcon },
-  { key: "status", label: "Employment Status", short: "Status", icon: ClipboardListIcon },
-  { key: "jobinfo", label: "Job Information", short: "Job Info", icon: MapPinIcon },
-  { key: "compensation", label: "Compensation", short: "Compensation", icon: BadgeDollarSignIcon },
-  { key: "allowances", label: "Allowances", short: "Allowances", icon: WalletIcon },
-  { key: "payrates", label: "Pay Rates & Bonus", short: "Pay Rates", icon: PercentIcon },
-  { key: "bonus", label: "Bonus", short: "Bonus", icon: GiftIcon },
-  { key: "commission", label: "Commission", short: "Commission", icon: TrendingUpIcon },
-  { key: "equity", label: "Equity", short: "Equity", icon: PieChartIcon },
-  { key: "airportpass", label: "Airport Security Pass", short: "Airport Pass", icon: ShieldIcon },
+const TABS: { key: TabKey; label: string; short: string; icon: any; group: string }[] = [
+  { key: "personal", label: "Personal & Contact", short: "Personal", icon: UserIcon, group: "Profile" },
+  { key: "job", label: "Job", short: "Job", icon: BriefcaseIcon, group: "Employment" },
+  { key: "status", label: "Employment Status", short: "Status", icon: ClipboardListIcon, group: "Employment" },
+  { key: "jobinfo", label: "Job Information", short: "Job Info", icon: MapPinIcon, group: "Employment" },
+  { key: "compensation", label: "Compensation", short: "Compensation", icon: BadgeDollarSignIcon, group: "Pay" },
+  { key: "allowances", label: "Allowances", short: "Allowances", icon: WalletIcon, group: "Pay" },
+  { key: "payrates", label: "Pay Rates & Bonus", short: "Pay Rates", icon: PercentIcon, group: "Pay" },
+  { key: "bonus", label: "Bonus", short: "Bonus", icon: GiftIcon, group: "Pay" },
+  { key: "commission", label: "Commission", short: "Commission", icon: TrendingUpIcon, group: "Pay" },
+  { key: "equity", label: "Equity", short: "Equity", icon: PieChartIcon, group: "Pay" },
+  { key: "airportpass", label: "Airport Security Pass", short: "Airport Pass", icon: ShieldIcon, group: "Compliance" },
 ];
 
 export function EmployeeProfileView({
@@ -148,17 +148,31 @@ export function EmployeeProfileView({
         <aside className="sticky top-8 hidden h-fit w-[272px] shrink-0 self-start lg:block">
           <IdentityCard profile={profile} jobInfo={jobInfo} status={status} />
 
-          <nav
+      <nav
             aria-label="Profile sections"
-            className="mt-4 max-h-[calc(100vh-22rem)] overflow-y-auto rounded-2xl border border-[#EAE7F6] bg-white p-1.5 shadow-[0_1px_2px_rgba(23,15,60,0.04)]"
+            className="mt-4 max-h-[calc(100vh-22rem)] w-full overflow-y-auto overflow-x-hidden rounded-2xl border border-[#EAE7F6] bg-white p-2 shadow-[0_1px_2px_rgba(23,15,60,0.04)]"
           >
-            {TABS.map((tab) => (
-              <SidebarLink
-                key={tab.key}
-                tab={tab}
-                active={activeTab === tab.key}
-                onClick={() => selectTab(tab.key)}
-              />
+            {Object.entries(
+              TABS.reduce<Record<string, typeof TABS>>((acc, tab) => {
+                (acc[tab.group] ||= []).push(tab);
+                return acc;
+              }, {}),
+            ).map(([group, tabs], i) => (
+              <div key={group} className={i > 0 ? "mt-4" : ""}>
+                <p className="px-2.5 pb-1.5 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {group}
+                </p>
+                <div className="space-y-0.5">
+                  {tabs.map((tab) => (
+                    <SidebarLink
+                      key={tab.key}
+                      tab={tab}
+                      active={activeTab === tab.key}
+                      onClick={() => selectTab(tab.key)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
         </aside>
@@ -382,20 +396,24 @@ function SidebarLink({
       type="button"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition ${
+      className={`group relative flex w-full min-w-0 items-center gap-2.5 rounded-lg py-2 pl-3 pr-2.5 text-left text-[13px] transition-colors ${
         active
-          ? "bg-[#6C4DF4] text-white shadow-sm"
-          : "text-slate-600 hover:bg-[#F1EDFF] hover:text-[#6C4DF4]"
+          ? "bg-[#F1EDFF]/60 font-semibold text-[#6C4DF4]"
+          : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
-      <Icon
-        className={`size-4 shrink-0 ${active ? "text-white" : "text-slate-400 group-hover:text-[#6C4DF4]"}`}
+      <span
+        className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full transition-colors ${
+          active ? "bg-[#6C4DF4]" : "bg-transparent"
+        }`}
       />
-      <span className="truncate">{tab.label}</span>
+      <Icon
+        className={`size-4 shrink-0 ${active ? "text-[#6C4DF4]" : "text-slate-400 group-hover:text-slate-500"}`}
+      />
+      <span className="min-w-0 flex-1 truncate">{tab.label}</span>
     </button>
   );
 }
-
 // ── Mobile bottom nav: fixed pill trigger + slide-up sheet ─────────────────
 function MobileBottomNav({
   tabs,
