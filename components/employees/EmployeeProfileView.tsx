@@ -141,91 +141,52 @@ export function EmployeeProfileView({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  return (
+return (
     <div className="min-h-screen w-full bg-[#F7F6FB]">
-      <div className="mx-auto flex w-full max-w-[1400px] gap-6 px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-10">
-        {/* ── Desktop sidebar — sticky, always in view, no scroll-hunting ── */}
-        <aside className="sticky top-8 hidden h-fit w-[272px] shrink-0 self-start lg:block">
-          <IdentityCard profile={profile} jobInfo={jobInfo} status={status} />
+      <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-28 sm:px-6 lg:px-10 lg:py-10 lg:pb-10">
+        {/* ── Identity banner — full width, across the top ── */}
+        <IdentityBanner profile={profile} jobInfo={jobInfo} status={status} />
 
-      <nav
-            aria-label="Profile sections"
-            className="mt-4 max-h-[calc(100vh-22rem)] w-full overflow-y-auto overflow-x-hidden rounded-2xl border border-[#EAE7F6] bg-white p-2 shadow-[0_1px_2px_rgba(23,15,60,0.04)]"
-          >
-            {Object.entries(
-              TABS.reduce<Record<string, typeof TABS>>((acc, tab) => {
-                (acc[tab.group] ||= []).push(tab);
-                return acc;
-              }, {}),
-            ).map(([group, tabs], i) => (
-              <div key={group} className={i > 0 ? "mt-4" : ""}>
-                <p className="px-2.5 pb-1.5 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {group}
-                </p>
-                <div className="space-y-0.5">
-                  {tabs.map((tab) => (
-                    <SidebarLink
-                      key={tab.key}
-                      tab={tab}
-                      active={activeTab === tab.key}
-                      onClick={() => selectTab(tab.key)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </aside>
+        {/* ── Horizontal tab bar — wraps to multiple rows, never scrolls ── */}
+        <nav
+          aria-label="Profile sections"
+          className="mt-6 hidden flex-wrap gap-1 border-b border-[#EAE7F6] lg:flex"
+        >
+          {TABS.map((tab) => (
+            <TopTabLink
+              key={tab.key}
+              tab={tab}
+              active={activeTab === tab.key}
+              onClick={() => selectTab(tab.key)}
+            />
+          ))}
+        </nav>
 
         {/* ── Main column ─────────────────────────────────────────── */}
-        <div className="min-w-0 flex-1">
-          {/* Mobile identity strip */}
-          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-[#EAE7F6] bg-white p-4 shadow-sm lg:hidden">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#F1EDFF] font-['Fraunces'] italic text-[#6C4DF4]">
-              {initials(profile.full_name)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-['Fraunces'] italic text-slate-900">
-                {profile.full_name}
-              </p>
-              <p className="truncate text-xs text-slate-500">
-                {jobInfo?.job_title || "—"}
-              </p>
-            </div>
-            {status?.employment_status && (
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
-                  STATUS_STYLES[status.employment_status] ||
-                  "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {status.employment_status}
-              </span>
-            )}
-          </div>
-
+        <div className="mt-6 min-w-0">
           {profile.job_tab.job.probation_pending && (
             <ProbationBanner
               employeeId={profile.id}
               probationEndDate={profile.job_tab.job.probation_end_date}
             />
           )}
-{isContractEndingSoon(profile.job_tab.job.contract_end_date) && (
+          {isContractEndingSoon(profile.job_tab.job.contract_end_date) && (
             <ContractEndBanner
               endDate={profile.job_tab.job.contract_end_date}
               onReview={() => selectTab("job")}
             />
           )}
-          {/* Section heading — orients the user; the count shows progress
-              through the sections without needing the nav visible. */}
-          <div className="mb-4 flex items-center justify-between gap-3">
+
+          {/* Section heading — shown on mobile only, since desktop tabs
+              already label the active section */}
+          <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
             <div className="flex items-center gap-2">
               <activeTabMeta.icon className="size-4 text-[#6C4DF4]" />
               <h2 className="font-['Fraunces'] text-lg italic text-slate-900">
                 {activeTabMeta.label}
               </h2>
             </div>
-            <span className="hidden shrink-0 font-['IBM_Plex_Mono'] text-[11px] text-slate-400 lg:block">
+            <span className="hidden shrink-0 font-['IBM_Plex_Mono'] text-[11px] text-slate-400 sm:block">
               {String(activeIndex + 1).padStart(2, "0")} / {String(TABS.length).padStart(2, "0")}
             </span>
           </div>
@@ -241,10 +202,7 @@ export function EmployeeProfileView({
               />
             )}
             {activeTab === "status" && (
-              <EmploymentStatusSection
-                employeeId={profile.id}
-                current={status}
-              />
+              <EmploymentStatusSection employeeId={profile.id} current={status} />
             )}
             {activeTab === "jobinfo" && (
               <JobInformationSection
@@ -268,10 +226,7 @@ export function EmployeeProfileView({
               />
             )}
             {activeTab === "bonus" && (
-              <BonusSection
-                employeeId={profile.id}
-                history={profile.job_tab.bonus_history}
-              />
+              <BonusSection employeeId={profile.id} history={profile.job_tab.bonus_history} />
             )}
             {activeTab === "commission" && (
               <CommissionSection
@@ -280,10 +235,7 @@ export function EmployeeProfileView({
               />
             )}
             {activeTab === "equity" && (
-              <EquitySection
-                employeeId={profile.id}
-                history={profile.job_tab.equity_history}
-              />
+              <EquitySection employeeId={profile.id} history={profile.job_tab.equity_history} />
             )}
             {activeTab === "airportpass" && (
               <AirportPassSection
@@ -295,8 +247,7 @@ export function EmployeeProfileView({
         </div>
       </div>
 
-      {/* ── Mobile bottom nav — fixed to the viewport, always reachable,
-          never requires scrolling up or down to find it ── */}
+      {/* Mobile bottom nav unchanged */}
       <MobileBottomNav
         tabs={TABS}
         activeTab={activeTab}
@@ -308,8 +259,7 @@ export function EmployeeProfileView({
   );
 }
 
-// ── Identity card (desktop sidebar header) ──────────────────────────────
-function IdentityCard({
+function IdentityBanner({
   profile,
   jobInfo,
   status,
@@ -321,67 +271,50 @@ function IdentityCard({
   return (
     <div className="overflow-hidden rounded-2xl border border-[#EAE7F6] bg-white shadow-[0_1px_2px_rgba(23,15,60,0.04)]">
       <div className="h-16 bg-gradient-to-r from-[#6C4DF4] to-[#8F7BFA]" />
-      <div className="-mt-10 flex flex-col items-center px-6 pb-6 text-center">
-        <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
+      <div className="flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-5">
+        <div className="-mt-10 flex size-20 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#F1EDFF] font-['Fraunces'] text-2xl italic text-[#6C4DF4] shadow-sm">
           {initials(profile.full_name)}
         </div>
-        <p className="mt-3 font-['Fraunces'] text-lg italic text-slate-900">
-          {profile.full_name}
-        </p>
-        <p className="mt-0.5 text-sm text-slate-500">
-          {jobInfo?.job_title || "—"}
-        </p>
+        <div className="min-w-0 flex-1 pt-1 sm:pt-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <p className="font-['Fraunces'] text-xl italic text-slate-900">
+              {profile.full_name}
+            </p>
+            {status?.employment_status && (
+              <span
+                className={`rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
+                  STATUS_STYLES[status.employment_status] || "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {status.employment_status}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-sm text-slate-500">{jobInfo?.job_title || "—"}</p>
+        </div>
 
-        {status?.employment_status && (
-          <span
-            className={`mt-3 rounded-full px-2.5 py-1 font-['IBM_Plex_Mono'] text-[10px] font-semibold uppercase tracking-wide ${
-              STATUS_STYLES[status.employment_status] ||
-              "bg-slate-100 text-slate-600"
-            }`}
-          >
-            {status.employment_status}
-          </span>
-        )}
-      </div>
-
-      <div className="space-y-4 border-t border-[#EDEBF7] px-6 py-5">
-        <SideRow
-          icon={HashIcon}
-          label="Employee #"
-          value={profile.vitals.employee_number}
-        />
-        <SideRow
-          icon={MailIcon}
-          label="Work Email"
-          value={profile.vitals.work_email}
-        />
-        <SideRow
-          icon={PhoneIcon}
-          label="Work Phone"
-          value={profile.vitals.work_phone}
-        />
-        <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
-        <SideRow
-          icon={BriefcaseIcon}
-          label="Department"
-          value={jobInfo?.department}
-        />
-        <SideRow
-          icon={CalendarClockIcon}
-          label="Hire Date"
-          value={
-            profile.job_tab.job.hire_date
-              ? new Date(profile.job_tab.job.hire_date).toLocaleDateString()
-              : undefined
-          }
-        />
+        {/* Compact vitals row — replaces the old sidebar list */}
+        <div className="grid w-full grid-cols-2 gap-x-6 gap-y-3 border-t border-[#EDEBF7] pt-4 sm:mt-0 sm:w-auto sm:grid-cols-3 sm:border-0 sm:pt-0">
+          <SideRow icon={HashIcon} label="Employee #" value={profile.vitals.employee_number} />
+          <SideRow icon={MailIcon} label="Work Email" value={profile.vitals.work_email} />
+          <SideRow icon={PhoneIcon} label="Work Phone" value={profile.vitals.work_phone} />
+          <SideRow icon={MapPinIcon} label="Location" value={jobInfo?.location} />
+          <SideRow icon={BriefcaseIcon} label="Department" value={jobInfo?.department} />
+          <SideRow
+            icon={CalendarClockIcon}
+            label="Hire Date"
+            value={
+              profile.job_tab.job.hire_date
+                ? new Date(profile.job_tab.job.hire_date).toLocaleDateString()
+                : undefined
+            }
+          />
+        </div>
       </div>
     </div>
   );
 }
-
-// ── Desktop sidebar link ─────────────────────────────────────────────────
-function SidebarLink({
+function TopTabLink({
   tab,
   active,
   onClick,
@@ -396,21 +329,19 @@ function SidebarLink({
       type="button"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex w-full min-w-0 items-center gap-2.5 rounded-lg py-2 pl-3 pr-2.5 text-left text-[13px] transition-colors ${
-        active
-          ? "bg-[#F1EDFF]/60 font-semibold text-[#6C4DF4]"
-          : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+      className={`group relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[13px] font-medium transition-colors ${
+        active ? "text-[#6C4DF4]" : "text-slate-500 hover:text-slate-800"
       }`}
     >
+      <Icon
+        className={`size-3.5 shrink-0 ${active ? "text-[#6C4DF4]" : "text-slate-400 group-hover:text-slate-500"}`}
+      />
+      {tab.label}
       <span
-        className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full transition-colors ${
+        className={`absolute inset-x-0 -bottom-px h-[2px] rounded-full transition-colors ${
           active ? "bg-[#6C4DF4]" : "bg-transparent"
         }`}
       />
-      <Icon
-        className={`size-4 shrink-0 ${active ? "text-[#6C4DF4]" : "text-slate-400 group-hover:text-slate-500"}`}
-      />
-      <span className="min-w-0 flex-1 truncate">{tab.label}</span>
     </button>
   );
 }
