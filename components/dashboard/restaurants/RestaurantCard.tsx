@@ -7,13 +7,13 @@ import {
   ArrowDown,
   Loader2,
   X,
-  Link,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
 import { brand } from "@/lib/colors";
 import { IRestaurant } from "@/types";
 import { useGenerateQrMutation } from "@/redux/restaurants/restaurantApi";
+import Link from "next/link";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 
